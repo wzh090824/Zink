@@ -226,7 +226,13 @@
         </button>
       </div>
 
-      <div class="build-ring" id="build-ring" data-state="running" aria-hidden="true">
+      <div
+        class="build-ring"
+        id="build-ring"
+        data-state="running"
+        data-stage="waiting"
+        aria-hidden="true"
+      >
         <svg class="build-ring-svg" viewBox="0 0 120 120">
           <circle class="build-ring-track" cx="60" cy="60" r="52"></circle>
           <circle class="build-ring-progress" id="build-ring-progress" cx="60" cy="60" r="52"></circle>

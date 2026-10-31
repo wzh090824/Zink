@@ -392,12 +392,36 @@ function validUrl(value) {
   }
 }
 
+function animateBuildText(element, text) {
+  if (element.textContent === text) return;
+  element.textContent = text;
+  if (
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+    typeof element.animate !== "function"
+  )
+    return;
+
+  element.getAnimations().forEach((animation) => animation.cancel());
+  element.animate(
+    [
+      { opacity: 0.35, transform: "translateY(5px)" },
+      { opacity: 1, transform: "translateY(0)" },
+    ],
+    {
+      duration: 280,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+    },
+  );
+}
+
 function startBuildAnimation(kind = "short-link") {
   currentBuildKind = kind;
-  ringProgress.style.strokeDasharray = "90 327";
-  ringProgress.style.strokeDashoffset = "0";
+  ringProgress.style.removeProperty("stroke-dasharray");
+  ringProgress.style.removeProperty("stroke-dashoffset");
   buildDialog.dataset.state = "running";
+  buildDialog.dataset.stage = "waiting";
   buildRing.dataset.state = "running";
+  buildRing.dataset.stage = "waiting";
   buildDialogTitle.textContent = t(
     kind === "site-settings" ? "settingsBuildTitle" : "buildTitle",
   );
@@ -426,25 +450,33 @@ function setBuildState(state, messageKey) {
   };
   const finished = state === "success" || state === "failure";
   buildDialog.dataset.state = finished ? state : "running";
+  buildDialog.dataset.stage = state;
   buildRing.dataset.state = finished ? state : "running";
+  buildRing.dataset.stage = state;
   if (finished) {
     ringProgress.style.strokeDasharray = String(ringCircumference);
     ringProgress.style.strokeDashoffset = "0";
   }
-  buildDialogTitle.textContent = t(
-    state === "success"
-      ? currentBuildKind === "site-settings"
-        ? "settingsBuildSuccessTitle"
-        : "buildSuccessTitle"
-      : state === "failure"
+  animateBuildText(
+    buildDialogTitle,
+    t(
+      state === "success"
         ? currentBuildKind === "site-settings"
-          ? "settingsBuildFailureTitle"
-          : "buildFailureTitle"
-        : currentBuildKind === "site-settings"
-          ? "settingsBuildTitle"
-          : "buildTitle",
+          ? "settingsBuildSuccessTitle"
+          : "buildSuccessTitle"
+        : state === "failure"
+          ? currentBuildKind === "site-settings"
+            ? "settingsBuildFailureTitle"
+            : "buildFailureTitle"
+          : currentBuildKind === "site-settings"
+            ? "settingsBuildTitle"
+            : "buildTitle",
+    ),
   );
-  buildStatus.textContent = t(messageKey || messages[state] || "statusRunning");
+  animateBuildText(
+    buildStatus,
+    t(messageKey || messages[state] || "statusRunning"),
+  );
 }
 
 document
@@ -484,7 +516,7 @@ async function watchAction(requestId, code, requestedAt, kind = "short-link") {
       }
       if (data.state === "failure") return;
     } catch {
-      buildStatus.textContent = t("statusRetry");
+      animateBuildText(buildStatus, t("statusRetry"));
     }
   }
 }
