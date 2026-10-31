@@ -713,8 +713,9 @@ select:focus-visible {
   stroke-linecap: round;
   transition:
     stroke 700ms ease,
-    stroke-dasharray 680ms cubic-bezier(0.22, 1, 0.36, 1),
-    stroke-dashoffset 680ms cubic-bezier(0.22, 1, 0.36, 1);
+    stroke-dasharray 1100ms cubic-bezier(0.22, 1, 0.36, 1),
+    stroke-dashoffset 1100ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 900ms ease;
 }
 .build-dialog[open] .build-ring[data-state="running"] .build-ring-progress {
   animation: build-progress-sweep var(--build-sweep-duration) cubic-bezier(0.22, 1, 0.36, 1) infinite;
@@ -742,12 +743,18 @@ select:focus-visible {
     transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .build-success-icon {
+  width: 48px;
+  height: 48px;
   stroke: var(--green);
+  stroke-width: 2.7;
+  transition:
+    opacity 620ms ease 100ms,
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1) 100ms;
 }
 .build-success-icon path {
-  stroke-dasharray: 24;
-  stroke-dashoffset: 24;
-  transition: stroke-dashoffset 650ms cubic-bezier(0.22, 1, 0.36, 1) 140ms;
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  transition: stroke-dashoffset 1000ms cubic-bezier(0.22, 1, 0.36, 1) 180ms;
 }
 .build-failure-icon {
   stroke: var(--red);
