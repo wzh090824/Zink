@@ -42,6 +42,8 @@ Fine-grained token 的有效期应按自己的凭据轮换策略设置。Token �
    | Secret   | `ADMIN_KEY`     | 管理员访问密码（可选）     |
 
    `GITHUB_OWNER` 是 Worker 定位你 Fork 所必需的设置，只需在仪表盘填一次，无需改源码。`wrangler.toml` 的 `keep_vars = true` 会保留这些变量。
+
+   已部署旧版本的用户：将已有 GitHub token 以新 Secret 名称 `GH_TOKEN` 添加并重新部署。新版 Worker 只读取 `GH_TOKEN`；如果旧设置中存在 `GITHUB_TOKEN`，可删除。
 4. 在 **Settings → Build → Build watch paths** 将 **Include paths** 设为 `*`、**Exclude paths** 设为 `List/*`，避免每次创建短链时都重新部署。然后在 **Settings → Domains & Routes** 启用 `workers.dev` 或添加自己的域名。
 5. 打开 Worker 地址，确认服务已连接并创建一条测试短链。后续推送源码到 `main` 会自动重新部署；Action 只更新 `List/` 时会被路径过滤忽略。
 
