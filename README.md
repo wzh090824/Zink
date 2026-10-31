@@ -7,7 +7,7 @@ Zink 是一个无数据库短链接工具：Cloudflare Worker 负责页面、权
 首次打开会提示选择访问模式：
 
 - **访客模式**：可以跳过密码。短码由 Worker 随机生成，不能自定义。
-- **管理员模式**：输入 Cloudflare Worker Secret `ADMIN_KEY` 后可以自定义短码，支持中文及任意可打印字符，最多 64 个 Unicode 字符、180 个 UTF-8 字节。密码只保存在当前标签页会话中。
+- **管理员模式**：输入 Cloudflare Worker 机密 `ADMIN_KEY` 后可以自定义短码，支持中文及任意可打印字符，最多 64 个 Unicode 字符、180 个 UTF-8 字节。密码只保存在当前标签页会话中。
 
 提交后，页面每 0.5 秒同步本次 GitHub Action 的排队、运行和完成状态，直到 Action 完成或失败。目标网址最长 300 个字符；可选设置本地时间失效日期。
 
@@ -40,7 +40,7 @@ GitHub 仓库：[wzh090824/Zink](https://github.com/wzh090824/Zink)
 快速概览：
 
 1. Fork [Zink 仓库](https://github.com/wzh090824/Zink) 到自己的 GitHub 账号。
-2. 为 Fork 创建仅授予 `Contents: Read and write`、`Actions: Read-only`、`Metadata: Read-only` 权限的 Fine-grained token，并将它作为 Cloudflare Secret `GH_TOKEN` 保存。
+2. 为 Fork 创建仅授予 `Contents` 读写、`Actions` 只读和 `Metadata` 只读权限的精细化访问令牌，并将它作为 Cloudflare 机密 `GH_TOKEN` 保存。
 3. 在 Cloudflare 网页仪表盘连接自己的 Fork，设置仓库变量和 Token；完整步骤见 [部署指南](Deployment.md)。
 
 ## 项目结构与命名
