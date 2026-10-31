@@ -105,6 +105,14 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
   });
   assert.equal(acceptedPassword.status, 200);
   assert.equal(rejectedPassword.status, 401);
+  const rejectedPasswordEnglish = await request("/__api/access", {
+    method: "POST",
+    headers: { "X-Admin-Key": "wrong", "Accept-Language": "en" },
+  });
+  assert.equal(
+    (await rejectedPasswordEnglish.json()).error,
+    "Incorrect access password.",
+  );
 
   const guestCustomCode = await create({
     code: "custom",
@@ -135,6 +143,14 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
     )
   ).json();
   assert.equal(waiting.state, "waiting");
+  const waitingEnglish = await request(
+    `/__api/actions?requestId=${guest.requestId}&code=${encodeURIComponent(guest.code)}`,
+    { headers: { "Accept-Language": "en" } },
+  );
+  assert.equal(
+    (await waitingEnglish.json()).message,
+    "GitHub received the request and is starting the Action.",
+  );
 
   const code = "我的/短链? #";
   const expiresAt = new Date(Date.now() + 60_000).toISOString();

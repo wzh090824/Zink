@@ -3,63 +3,62 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f5f6f8" />
+    <meta name="theme-color" content="#ffffff" />
     <title>短链不存在</title>
-    <link rel="stylesheet" href="/Assets/Styles.css" />
     <script>
       (() => {
+        let theme = "light";
         try {
-          const theme = localStorage.getItem("shortlink-theme");
-          if (theme === "light" || theme === "dark")
-            document.documentElement.dataset.theme = theme;
-          else if (matchMedia("(prefers-color-scheme: dark)").matches)
-            document.documentElement.dataset.theme = "dark";
-        } catch {}
+          const saved = localStorage.getItem("shortlink-theme");
+          theme =
+            saved === "light" || saved === "dark"
+              ? saved
+              : matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+        } catch {
+          theme = matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content =
+          theme === "dark" ? "#09090b" : "#ffffff";
       })();
     </script>
+    <link rel="stylesheet" href="/Assets/Styles.css" />
+    <script type="module" src="/Assets/NotFound.js"></script>
   </head>
   <body>
     <div class="page-shell error-shell">
       <header class="page-tools">
-        <span class="site-label">短链服务</span>
-        <div class="theme-switch" role="group" aria-label="主题">
-          <button type="button" data-theme-choice="light" aria-pressed="false">
-            浅色
-          </button>
-          <button type="button" data-theme-choice="dark" aria-pressed="false">
-            深色
+        <span class="site-label" data-i18n="serviceTitle404">短链服务</span>
+        <div class="page-options">
+          <label class="sr-only" for="language-select" data-i18n="language">语言</label>
+          <select class="language-select" id="language-select" aria-label="语言">
+            <option value="zh-CN">简体中文</option>
+            <option value="en">English</option>
+          </select>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到深色模式" title="切换到深色模式">
+            <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
+            </svg>
+            <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20.2 15.5A8.5 8.5 0 0 1 8.5 3.8 8.6 8.6 0 1 0 20.2 15.5Z"></path>
+            </svg>
           </button>
         </div>
       </header>
       <main class="not-found-main">
         <p class="error-code">404</p>
-        <h1>短链暂不可用</h1>
-        <p>短码不存在，或链接已经失效。</p>
-        <a class="back-link" href="/">返回创建页面</a>
+        <h1 data-i18n="notFoundHeading">短链暂不可用</h1>
+        <p data-i18n="notFoundMessage">短码不存在，或链接已经失效。</p>
+        <a class="back-link" href="/" data-i18n="backToCreator">返回创建页面</a>
       </main>
       <footer class="page-footer">
-        <span>无数据库 · Cloudflare + GitHub</span>
+        <span data-i18n="footerNoDatabase">无数据库 · Cloudflare + GitHub</span>
       </footer>
     </div>
-    <script>
-      document.querySelectorAll("[data-theme-choice]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const theme = button.dataset.themeChoice;
-          document.documentElement.dataset.theme = theme;
-          try {
-            localStorage.setItem("shortlink-theme", theme);
-          } catch {}
-          document
-            .querySelectorAll("[data-theme-choice]")
-            .forEach((item) =>
-              item.setAttribute("aria-pressed", String(item === button)),
-            );
-        });
-      });
-      const current = document.documentElement.dataset.theme || "light";
-      document
-        .querySelector(`[data-theme-choice="${current}"]`)
-        ?.setAttribute("aria-pressed", "true");
-    </script>
   </body>
 </html>

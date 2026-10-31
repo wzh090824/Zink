@@ -26,9 +26,12 @@ export default {
     if (url.pathname === `${API}/links` && request.method === "POST")
       return createLink(request, env);
     if (url.pathname === `${API}/actions` && request.method === "GET")
-      return getActionStatus(url, env);
+      return getActionStatus(request, url, env);
     if (url.pathname.startsWith(`${API}/`))
-      return jsonResponse({ error: "Not found" }, 404);
+      return jsonResponse(
+        { error: localized(request, "未找到该接口。", "API endpoint not found.") },
+        404,
+      );
 
     if (request.method !== "GET" && request.method !== "HEAD") {
       return new Response("Method not allowed", {
@@ -57,17 +60,35 @@ export default {
 
 async function verifyAdminAccess(request, env) {
   if (!env.ADMIN_KEY)
-    return jsonResponse({ error: "管理员访问密码尚未配置。" }, 503);
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "管理员访问密码尚未配置。",
+          "The admin password is not configured.",
+        ),
+      },
+      503,
+    );
   const key = request.headers.get("X-Admin-Key") || "";
   if (!constantTimeEqual(key, env.ADMIN_KEY))
-    return jsonResponse({ error: "访问密码不正确。" }, 401);
+    return jsonResponse(
+      { error: localized(request, "访问密码不正确。", "Incorrect access password.") },
+      401,
+    );
   return jsonResponse({ authenticated: true });
 }
 
 async function createLink(request, env) {
   if (!env.GITHUB_TOKEN || !hasRepository(env)) {
     return jsonResponse(
-      { error: "Cloudflare Worker 尚未完成 GitHub 配置。" },
+      {
+        error: localized(
+          request,
+          "Cloudflare Worker 尚未完成 GitHub 配置。",
+          "GitHub is not configured for this Cloudflare Worker.",
+        ),
+      },
       503,
     );
   }
@@ -76,7 +97,10 @@ async function createLink(request, env) {
   try {
     body = await request.json();
   } catch {
-    return jsonResponse({ error: "请求内容必须是 JSON。" }, 400);
+    return jsonResponse(
+      { error: localized(request, "请求内容必须是 JSON。", "Request body must be JSON.") },
+      400,
+    );
   }
 
   const suppliedKey = request.headers.get("X-Admin-Key") || "";
@@ -85,7 +109,16 @@ async function createLink(request, env) {
     isAdmin &&
     (!env.ADMIN_KEY || !constantTimeEqual(suppliedKey, env.ADMIN_KEY))
   ) {
-    return jsonResponse({ error: "管理员访问密码不正确。" }, 401);
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "管理员访问密码不正确。",
+          "Incorrect admin password.",
+        ),
+      },
+      401,
+    );
   }
 
   const target = typeof body.url === "string" ? body.url.trim() : "";
@@ -95,17 +128,45 @@ async function createLink(request, env) {
   if (!validTarget(target))
     return jsonResponse(
       {
-        error: "目标网址必须是有效的 HTTP 或 HTTPS 网址，且不超过 300 个字符。",
+        error: localized(
+          request,
+          "目标网址必须是有效的 HTTP 或 HTTPS 网址，且不超过 300 个字符。",
+          "Destination must be a valid HTTP or HTTPS URL no longer than 300 characters.",
+        ),
       },
       400,
     );
   if (expiresAt && !validFutureTimestamp(expiresAt))
-    return jsonResponse({ error: "失效时间必须是未来的有效时间。" }, 400);
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "失效时间必须是未来的有效时间。",
+          "Expiration must be a valid future time.",
+        ),
+      },
+      400,
+    );
   if (!isAdmin && requestedCode !== "")
-    return jsonResponse({ error: "访客模式只能使用系统生成的随机短码。" }, 403);
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "访客模式只能使用系统生成的随机短码。",
+          "Guest mode can only use a randomly generated code.",
+        ),
+      },
+      403,
+    );
   if (isAdmin && requestedCode !== "" && !validCode(requestedCode)) {
     return jsonResponse(
-      { error: "自定义短码不能为空白，最多 64 个字符。" },
+      {
+        error: localized(
+          request,
+          "自定义短码不能为空白，最多 64 个字符。",
+          "Custom code must contain 1 to 64 non-whitespace characters.",
+        ),
+      },
       400,
     );
   }
@@ -117,13 +178,40 @@ async function createLink(request, env) {
     collision = await getGithubFile(code, env);
     if (collision.kind === "missing") break;
     if (collision.kind === "error")
-      return jsonResponse({ error: "暂时无法查询 GitHub，请稍后重试。" }, 502);
+      return jsonResponse(
+        {
+          error: localized(
+            request,
+            "暂时无法查询 GitHub，请稍后重试。",
+            "GitHub could not be queried. Please try again.",
+          ),
+        },
+        502,
+      );
     if (isAdmin)
-      return jsonResponse({ error: "这个短码已经存在，请换一个短码。" }, 409);
+      return jsonResponse(
+        {
+          error: localized(
+            request,
+            "这个短码已经存在，请换一个短码。",
+            "This code already exists. Choose another code.",
+          ),
+        },
+        409,
+      );
     code = "";
   }
   if (!code || collision?.kind !== "missing")
-    return jsonResponse({ error: "暂时无法生成可用短码，请重试。" }, 503);
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "暂时无法生成可用短码，请重试。",
+          "A unique code could not be generated. Please try again.",
+        ),
+      },
+      503,
+    );
 
   const requestId = crypto.randomUUID();
   const headers = githubHeaders(env.GITHUB_TOKEN);
@@ -147,21 +235,39 @@ async function createLink(request, env) {
     });
   } catch {
     return jsonResponse(
-      { error: "无法连接 GitHub，请检查 Worker 网络和仓库配置。" },
+      {
+        error: localized(
+          request,
+          "无法连接 GitHub，请检查 Worker 网络和仓库配置。",
+          "Could not connect to GitHub. Check Worker network and repository settings.",
+        ),
+      },
       502,
     );
   }
   if ([401, 403, 404].includes(dispatch.status)) {
     return jsonResponse(
       {
-        error:
+        error: localized(
+          request,
           "GitHub 仓库或 Token 配置无效，或 Token 缺少 Contents/Actions 权限。",
+          "The GitHub repository or token is invalid, or the token lacks Contents/Actions permissions.",
+        ),
       },
       502,
     );
   }
   if (!dispatch.ok)
-    return jsonResponse({ error: "GitHub 未能接受创建请求。" }, 502);
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "GitHub 未能接受创建请求。",
+          "GitHub did not accept the creation request.",
+        ),
+      },
+      502,
+    );
 
   return jsonResponse(
     {
@@ -175,12 +281,24 @@ async function createLink(request, env) {
   );
 }
 
-async function getActionStatus(url, env) {
+async function getActionStatus(request, url, env) {
   if (!env.GITHUB_TOKEN || !hasRepository(env))
-    return jsonResponse({ error: "GitHub 查询尚未配置。" }, 503);
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "GitHub 查询尚未配置。",
+          "GitHub lookup is not configured.",
+        ),
+      },
+      503,
+    );
   const requestId = url.searchParams.get("requestId") || "";
   if (!REQUEST_ID_PATTERN.test(requestId))
-    return jsonResponse({ error: "请求编号无效。" }, 400);
+    return jsonResponse(
+      { error: localized(request, "请求编号无效。", "Invalid request ID.") },
+      400,
+    );
 
   const runsUrl = new URL(
     `https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/actions/runs`,
@@ -195,13 +313,25 @@ async function getActionStatus(url, env) {
       headers: githubHeaders(env.GITHUB_TOKEN),
     });
   } catch {
-    return jsonResponse({ error: "无法读取 GitHub Action 状态。" }, 502);
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "无法读取 GitHub Action 状态。",
+          "Could not read GitHub Action status.",
+        ),
+      },
+      502,
+    );
   }
   if (!response.ok)
     return jsonResponse(
       {
-        error:
+        error: localized(
+          request,
           "无法读取 GitHub Action 状态，请确认 Token 具有 Actions 只读权限。",
+          "Could not read Action status. Confirm the token has read-only Actions permission.",
+        ),
       },
       502,
     );
@@ -212,15 +342,36 @@ async function getActionStatus(url, env) {
   if (!run)
     return jsonResponse({
       state: "waiting",
-      message: "GitHub 已收到请求，正在启动 Action。",
+      message: localized(
+        request,
+        "GitHub 已收到请求，正在启动 Action。",
+        "GitHub received the request and is starting the Action.",
+      ),
     });
 
   const status = {
-    queued: { state: "queued", message: "Action 已排队，等待 GitHub Runner。" },
-    in_progress: { state: "running", message: "Action 正在写入短链文件。" },
+    queued: {
+      state: "queued",
+      message: localized(
+        request,
+        "Action 已排队，等待 GitHub Runner。",
+        "The Action is queued and waiting for a GitHub Runner.",
+      ),
+    },
+    in_progress: {
+      state: "running",
+      message: localized(
+        request,
+        "Action 正在写入短链文件。",
+        "The Action is writing the short-link file.",
+      ),
+    },
   }[run.status];
   const result = {
-    ...(status || { state: "running", message: "Action 正在处理。" }),
+    ...(status || {
+      state: "running",
+      message: localized(request, "Action 正在处理。", "The Action is processing the request."),
+    }),
     runId: run.id,
     runUrl: run.html_url,
   };
@@ -228,8 +379,12 @@ async function getActionStatus(url, env) {
     result.state = run.conclusion === "success" ? "success" : "failure";
     result.message =
       run.conclusion === "success"
-        ? "Action 已完成，短链现在可以访问。"
-        : `Action 执行失败（${run.conclusion || "unknown"}），请打开日志查看原因。`;
+        ? localized(request, "Action 已完成，短链现在可以访问。", "The Action completed. The short link is ready.")
+        : localized(
+            request,
+            `Action 执行失败（${run.conclusion || "unknown"}），请打开日志查看原因。`,
+            `The Action failed (${run.conclusion || "unknown"}). Open the log for details.`,
+          );
     if (result.state === "success") {
       const code = url.searchParams.get("code") || "";
       if (validCode(code)) {
@@ -459,6 +614,11 @@ function jsonResponse(body, status = 200) {
       "Cache-Control": "no-store",
     },
   });
+}
+
+function localized(request, chinese, english) {
+  const language = request.headers.get("Accept-Language") || "";
+  return /^en(?:-|,|$)/i.test(language.trim()) ? english : chinese;
 }
 
 async function notFound(request, env) {

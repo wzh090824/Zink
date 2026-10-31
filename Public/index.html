@@ -5,70 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#ffffff" />
     <title>创建短链</title>
+    <script>
+      (() => {
+        let theme = "light";
+        try {
+          const saved = localStorage.getItem("shortlink-theme");
+          theme =
+            saved === "light" || saved === "dark"
+              ? saved
+              : matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+        } catch {
+          theme = matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content =
+          theme === "dark" ? "#09090b" : "#ffffff";
+      })();
+    </script>
     <link rel="stylesheet" href="/Assets/Styles.css" />
-    <script src="/Assets/App.js" defer></script>
+    <script type="module" src="/Assets/App.js"></script>
   </head>
   <body>
     <div class="page-shell">
       <header class="page-tools">
         <div class="service-state" aria-live="polite">
           <span class="state-dot" id="state-dot"></span>
-          <span id="service-status">正在检查服务</span>
+          <span id="service-status" data-i18n="serviceChecking">正在检查服务</span>
         </div>
         <div class="access-controls">
-          <span class="access-badge" id="access-badge">选择访问模式</span>
+          <span class="access-badge" id="access-badge" data-i18n="chooseAccess">选择访问模式</span>
           <button class="change-mode-button" id="change-mode" type="button">
-            访问设置
+            <span id="change-mode-label" data-i18n="accessSettings">访问设置</span>
           </button>
         </div>
-        <div class="theme-switch" role="group" aria-label="主题">
-          <button type="button" data-theme-choice="light" aria-pressed="false">
-            浅色
-          </button>
-          <button type="button" data-theme-choice="dark" aria-pressed="false">
-            深色
+        <div class="page-options">
+          <label class="sr-only" for="language-select" data-i18n="language">语言</label>
+          <select class="language-select" id="language-select" aria-label="语言">
+            <option value="zh-CN">简体中文</option>
+            <option value="en">English</option>
+          </select>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到深色模式" title="切换到深色模式">
+            <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
+            </svg>
+            <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20.2 15.5A8.5 8.5 0 0 1 8.5 3.8 8.6 8.6 0 1 0 20.2 15.5Z"></path>
+            </svg>
           </button>
         </div>
       </header>
 
       <main class="main-content">
         <section class="form-card" aria-labelledby="page-title">
-          <h1 id="page-title">创建短链</h1>
+          <h1 id="page-title" data-i18n="createLink">创建短链</h1>
           <form id="create-form" novalidate>
             <div class="field-group" id="custom-code-field">
-              <label for="short-code">自定义短码</label>
+              <label for="short-code" data-i18n="customCode">自定义短码</label>
               <div class="input-with-prefix">
-                <span class="domain-prefix" id="origin-prefix"
-                  >your-domain/</span
-                >
+                <span class="domain-prefix" id="origin-prefix">your-domain/</span>
                 <input
                   id="short-code"
                   name="code"
                   type="text"
                   placeholder="例如：我的链接 / my-link"
+                  data-i18n-placeholder="codePlaceholder"
                   autocomplete="off"
                   aria-describedby="code-hint"
                 />
               </div>
-              <p class="field-hint" id="code-hint">
+              <p class="field-hint" id="code-hint" data-i18n="codeHint">
                 管理员可自定义任意字符和中文，最多 64 个字符；访客使用随机短码。
               </p>
             </div>
 
-            <div class="guest-code-note" id="guest-code-note" hidden>
+            <div class="guest-code-note" id="guest-code-note" data-i18n="guestCodeNote" hidden>
               访客模式：短码由系统随机生成，无法自定义。
             </div>
 
             <div class="field-group">
-              <label for="target-url"
-                >目标 URL
-                <span class="field-detail">（最多 300 字符）</span></label
-              >
+              <label for="target-url">
+                <span data-i18n="targetUrl">目标 URL</span>
+                <span class="field-detail" data-i18n="targetLimit">（最多 300 字符）</span>
+              </label>
               <input
                 id="target-url"
                 name="url"
                 type="url"
                 placeholder="https://example.com"
+                data-i18n-placeholder="targetPlaceholder"
                 maxlength="300"
                 autocomplete="url"
                 required
@@ -76,108 +105,107 @@
             </div>
 
             <div class="field-group">
-              <label for="expires-at"
-                >失效时间
-                <span class="field-detail">（当地时间，可选）</span></label
-              >
+              <label for="expires-at">
+                <span data-i18n="expiry">失效时间</span>
+                <span class="field-detail" data-i18n="localOptional">（当地时间，可选）</span>
+              </label>
               <input id="expires-at" name="expiresAt" type="datetime-local" />
             </div>
 
             <div class="form-error" id="form-error" role="alert" hidden></div>
-            <button class="submit-button" id="submit-button" type="submit">
+            <button class="submit-button" id="submit-button" type="submit" data-i18n="createLink">
               创建短链
             </button>
           </form>
 
-          <section
-            class="result-panel"
-            id="result-panel"
-            aria-live="polite"
-            hidden
-          >
-            <p class="result-message" id="result-message">
-              请求已提交，正在等待 GitHub Action。
-            </p>
-            <a
-              class="result-link"
-              id="result-link"
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-            ></a>
-            <button class="copy-button" id="copy-link" type="button">
-              复制短链
-            </button>
-            <div class="action-status-row">
-              <span class="action-status-dot" id="action-status-dot"></span
-              ><span id="action-status">等待 Action 启动</span>
-            </div>
-            <p class="uploaded-at" id="uploaded-at" hidden></p>
-            <a
-              class="run-link"
-              id="run-link"
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              hidden
-              >查看本次 Action <span aria-hidden="true">↗</span></a
-            >
-          </section>
-
-          <p class="form-note" id="form-note">
+          <p class="form-note" id="form-note" data-i18n="formNote">
             创建请求将由 GitHub Action 写入仓库，通常几秒后即可访问。
           </p>
-          <a
-            class="action-link"
-            id="action-link"
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            >查看构建状态 <span aria-hidden="true">↗</span></a
-          >
+          <a class="action-link" id="action-link" href="https://github.com" target="_blank" rel="noopener noreferrer">
+            <span data-i18n="viewBuildState">查看构建状态</span>
+            <span aria-hidden="true">↗</span>
+          </a>
         </section>
       </main>
 
       <footer class="page-footer">
-        <span>无数据库 · Cloudflare + GitHub</span>
-        <span>短码映射存储于仓库文件</span>
+        <span data-i18n="footerNoDatabase">无数据库 · Cloudflare + GitHub</span>
+        <span data-i18n="footerStorage">短码映射存储于仓库文件</span>
       </footer>
     </div>
 
-    <dialog
-      class="access-dialog"
-      id="access-dialog"
-      aria-labelledby="access-title"
-    >
+    <dialog class="access-dialog" id="access-dialog" aria-labelledby="access-title">
       <form id="access-form" novalidate>
-        <p class="dialog-eyebrow">SHORT LINK ACCESS</p>
-        <h2 id="access-title">选择访问模式</h2>
-        <p class="dialog-description">
+        <div class="access-dialog-tools">
+          <p class="dialog-eyebrow" data-i18n="accessEyebrow">SHORT LINK ACCESS</p>
+          <label class="sr-only" for="access-language-select" data-i18n="language">语言</label>
+          <select class="language-select" id="access-language-select" aria-label="语言">
+            <option value="zh-CN">简体中文</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <h2 id="access-title" data-i18n="accessTitle">选择访问模式</h2>
+        <p class="dialog-description" data-i18n="accessDescription">
           输入管理员访问密码以自定义短码，或跳过并以访客模式创建随机短链。
         </p>
-        <label for="access-password">管理员访问密码</label>
+        <label for="access-password" data-i18n="adminPassword">管理员访问密码</label>
         <input
           id="access-password"
           type="password"
           placeholder="输入访问密码"
+          data-i18n-placeholder="passwordPlaceholder"
           autocomplete="current-password"
         />
         <div class="access-error" id="access-error" role="alert" hidden></div>
-        <button
-          class="admin-access-button"
-          id="admin-access-button"
-          type="submit"
-        >
+        <button class="admin-access-button" id="admin-access-button" type="submit" data-i18n="adminEnter">
           管理员进入
         </button>
-        <button
-          class="guest-access-button"
-          id="guest-access-button"
-          type="button"
-        >
+        <button class="guest-access-button" id="guest-access-button" type="button" data-i18n="guestContinue">
           跳过，访客继续
         </button>
       </form>
+    </dialog>
+
+    <dialog class="build-dialog" id="build-dialog" aria-labelledby="build-title">
+      <div class="build-dialog-header">
+        <div>
+          <p class="build-eyebrow" data-i18n="buildEyebrow">GITHUB ACTION</p>
+          <h2 class="build-title" id="build-title" data-i18n="buildTitle">正在创建短链</h2>
+        </div>
+        <button class="icon-button" id="close-build" type="button" aria-label="关闭弹窗" title="关闭弹窗">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+      </div>
+
+      <div class="build-ring" id="build-ring" data-state="running" aria-hidden="true">
+        <svg class="build-ring-svg" viewBox="0 0 120 120">
+          <circle class="build-ring-track" cx="60" cy="60" r="52"></circle>
+          <circle class="build-ring-progress" id="build-ring-progress" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="build-ring-center">
+          <span class="countdown-number" id="countdown-number">
+            <span id="countdown-value">60</span>
+            <small data-i18n="secondsShort">秒</small>
+          </span>
+          <svg class="build-success-icon" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"></path></svg>
+          <svg class="build-failure-icon" viewBox="0 0 24 24"><path d="M12 7v5m0 4h.01"></path></svg>
+        </div>
+      </div>
+
+      <p class="build-status" id="build-status" aria-live="polite" data-i18n="statusWaiting">
+        GitHub 已收到请求，正在启动 Action。
+      </p>
+      <div class="build-link-block">
+        <span class="build-url-label" data-i18n="buildUrlLabel">短链地址</span>
+        <a class="build-result-link" id="build-result-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+      </div>
+      <p class="uploaded-at" id="uploaded-at" hidden></p>
+      <div class="build-dialog-actions">
+        <button class="copy-button" id="copy-link" type="button" data-i18n="copyLink">复制短链</button>
+        <a class="run-link" id="run-link" href="https://github.com" target="_blank" rel="noopener noreferrer" hidden>
+          <span data-i18n="actionRun">查看本次 Action</span><span aria-hidden="true">↗</span>
+        </a>
+      </div>
     </dialog>
   </body>
 </html>
