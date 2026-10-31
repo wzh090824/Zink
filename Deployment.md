@@ -1,6 +1,6 @@
-# 部署与维护指南
+# Zink 部署与维护指南
 
-本文从空仓库开始说明 GitHub 和 Cloudflare 配置。当前项目使用 Cloudflare Workers Static Assets，无需单独构建前端，也不依赖数据库。
+本文从空仓库开始说明 Zink 的 GitHub 和 Cloudflare 配置。项目使用 Cloudflare Workers Static Assets，无需单独构建前端，也不依赖数据库。
 
 ## 1. 前置要求
 
@@ -15,10 +15,10 @@
 2. 首次推送时设置远程地址和分支。将 URL 换成自己的仓库地址：
 
    ```sh
-   git remote add origin https://github.com/wzh090824/cloudflare-github-shortlink.git
+   git remote add origin https://github.com/wzh090824/Zink.git
    git branch -M main
    git add .gitignore README.md Deployment.md wrangler.toml Src Public Tests .github/workflows/Create-Short-Link.yml
-   git commit -m "Build Cloudflare GitHub short link service"
+   git commit -m "Build Zink short link service"
    git push -u origin main
    ```
 
@@ -43,7 +43,7 @@ Fine-grained token 的有效期应按自己的凭据轮换策略设置。Token �
 在项目根目录编辑 `wrangler.toml`：
 
 ```toml
-name = "github-shortlink"
+name = "zink"
 main = "Src/Worker.js"
 compatibility_date = "2026-10-30"
 
@@ -53,7 +53,7 @@ binding = "ASSETS"
 
 [vars]
 GITHUB_OWNER = "wzh090824"
-GITHUB_REPO = "cloudflare-github-shortlink"
+GITHUB_REPO = "Zink"
 GITHUB_BRANCH = "main"
 ```
 
@@ -105,7 +105,7 @@ npx wrangler deploy
 
 ```dotenv
 GITHUB_OWNER=你的 GitHub 用户名或组织名
-GITHUB_REPO=cloudflare-github-shortlink
+GITHUB_REPO=Zink
 GITHUB_BRANCH=main
 GITHUB_TOKEN=你的 Fine-grained token
 ADMIN_KEY=你的管理员访问密码

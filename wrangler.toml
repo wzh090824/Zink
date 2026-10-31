@@ -1,4 +1,4 @@
-name = "github-shortlink"
+name = "zink"
 main = "Src/Worker.js"
 compatibility_date = "2026-10-30"
 
@@ -9,5 +9,5 @@ binding = "ASSETS"
 [vars]
 # Set these values to the repository that contains this Worker and the workflow.
 GITHUB_OWNER = "wzh090824"
-GITHUB_REPO = "cloudflare-github-shortlink"
+GITHUB_REPO = "Zink"
 GITHUB_BRANCH = "main"

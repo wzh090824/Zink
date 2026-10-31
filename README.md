@@ -1,6 +1,6 @@
-# Cloudflare + GitHub 短链接
+# Zink
 
-一个无数据库短链接工具：Cloudflare Worker 负责页面、权限校验、GitHub 查询和跳转；GitHub Actions 负责把映射记录提交回仓库。短链映射文件存放在 `List/`，短码不存在或已过期时显示 `404` 页面。
+Zink 是一个无数据库短链接工具：Cloudflare Worker 负责页面、权限校验、GitHub 查询和跳转；GitHub Actions 负责把映射记录提交回仓库。短链映射文件存放在 `List/`，短码不存在或已过期时显示 `404` 页面。
 
 ## 使用方式
 
@@ -33,7 +33,7 @@ IP 来自 Cloudflare 的 `CF-Connecting-IP` 请求头；上传时间由 GitHub A
 
 完整部署、首次推送、GitHub 权限、Cloudflare 配置、验证与故障排查步骤见 [Deployment.md](Deployment.md)。
 
-GitHub 仓库：[wzh090824/cloudflare-github-shortlink](https://github.com/wzh090824/cloudflare-github-shortlink)
+GitHub 仓库：[wzh090824/Zink](https://github.com/wzh090824/Zink)
 
 快速概览：
 

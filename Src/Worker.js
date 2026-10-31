@@ -556,7 +556,7 @@ function githubHeaders(token) {
   const headers = {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
-    "User-Agent": "cloudflare-github-shortlink",
+    "User-Agent": "Zink",
   };
   if (token) headers.Authorization = `Bearer ${token}`;
   return headers;

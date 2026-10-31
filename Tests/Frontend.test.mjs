@@ -47,8 +47,10 @@ test("Chinese and English translations cover both pages", () => {
       assert.notEqual(translate(language, key), key, `${language}: ${key}`);
     }
   }
-  assert.equal(translate("en", "pageTitle"), "Create a short link");
-  assert.equal(translate("zh-CN", "pageTitle"), "创建短链");
+  assert.equal(translate("en", "pageTitle"), "Zink | Create a short link");
+  assert.equal(translate("zh-CN", "pageTitle"), "Zink | 创建短链");
+  assert.match(pageHtml, /<p class="site-label">Zink<\/p>/);
+  assert.match(notFoundHtml, /<title>Zink \| 短链不存在<\/title>/);
   assert.equal(translate("en", "uploadedAt", { time: "12:30" }), "Uploaded: 12:30");
 });
 
