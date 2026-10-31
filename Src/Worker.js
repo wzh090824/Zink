@@ -13,9 +13,9 @@ export default {
         ready: Boolean(repositoryConfigured && env.GH_TOKEN),
         adminEnabled: Boolean(env.ADMIN_KEY),
         repository: repositoryConfigured
-          ? `${env.GITHUB_OWNER}/${env.GITHUB_REPO}`
+          ? `${env.GH_OWNER}/${env.GH_REPO}`
           : "",
-        branch: env.GITHUB_BRANCH || "default",
+        branch: env.GH_BRANCH || "default",
       });
     }
     if (url.pathname === `${API}/access` && request.method === "POST")
@@ -212,7 +212,7 @@ async function createLink(request, env) {
 
   const requestId = crypto.randomUUID();
   const headers = githubHeaders(env.GH_TOKEN);
-  const dispatchUrl = `https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/dispatches`;
+  const dispatchUrl = `https://api.github.com/repos/${encodeURIComponent(env.GH_OWNER)}/${encodeURIComponent(env.GH_REPO)}/dispatches`;
   let dispatch;
   try {
     dispatch = await fetch(dispatchUrl, {
@@ -226,7 +226,7 @@ async function createLink(request, env) {
           url: target,
           expiresAt: expiresAt || null,
           ip: request.headers.get("CF-Connecting-IP") || "",
-          branch: env.GITHUB_BRANCH || "",
+          branch: env.GH_BRANCH || "",
         },
       }),
     });
@@ -297,11 +297,11 @@ async function getActionStatus(request, url, env) {
     );
 
   const runsUrl = new URL(
-    `https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/actions/runs`,
+    `https://api.github.com/repos/${encodeURIComponent(env.GH_OWNER)}/${encodeURIComponent(env.GH_REPO)}/actions/runs`,
   );
   runsUrl.searchParams.set("event", "repository_dispatch");
   runsUrl.searchParams.set("per_page", "100");
-  if (env.GITHUB_BRANCH) runsUrl.searchParams.set("branch", env.GITHUB_BRANCH);
+  if (env.GH_BRANCH) runsUrl.searchParams.set("branch", env.GH_BRANCH);
 
   let response;
   try {
@@ -426,7 +426,7 @@ async function getGithubFile(code, env, directory = "List") {
     .split("/")
     .map(encodeURIComponent)
     .join("/");
-  const endpoint = `https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/contents/${filePath}${env.GITHUB_BRANCH ? `?ref=${encodeURIComponent(env.GITHUB_BRANCH)}` : ""}`;
+  const endpoint = `https://api.github.com/repos/${encodeURIComponent(env.GH_OWNER)}/${encodeURIComponent(env.GH_REPO)}/contents/${filePath}${env.GH_BRANCH ? `?ref=${encodeURIComponent(env.GH_BRANCH)}` : ""}`;
   try {
     const response = await fetch(endpoint, {
       headers: githubHeaders(env.GH_TOKEN),
@@ -545,10 +545,10 @@ function randomCode() {
 
 function hasRepository(env) {
   return Boolean(
-    env.GITHUB_OWNER &&
-      env.GITHUB_REPO &&
-      env.GITHUB_OWNER !== "YOUR_GITHUB_USERNAME" &&
-      env.GITHUB_REPO !== "YOUR_REPOSITORY",
+    env.GH_OWNER &&
+      env.GH_REPO &&
+      env.GH_OWNER !== "YOUR_GH_OWNER" &&
+      env.GH_REPO !== "YOUR_REPOSITORY",
   );
 }
 

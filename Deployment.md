@@ -35,15 +35,15 @@ Fine-grained token 的有效期应按自己的凭据轮换策略设置。Token �
 
    | 类型     | 名称            | 值                         |
    | -------- | --------------- | -------------------------- |
-   | Variable | `GITHUB_OWNER`  | 你的 GitHub 用户名         |
-   | Variable | `GITHUB_REPO`   | `Zink`                     |
-   | Variable | `GITHUB_BRANCH` | `main`                     |
+   | Variable | `GH_OWNER`      | 你的 GitHub 用户名         |
+   | Variable | `GH_REPO`       | `Zink`                     |
+   | Variable | `GH_BRANCH`     | `main`                     |
    | Secret   | `GH_TOKEN`      | 上一节创建的 Fine-grained token |
    | Secret   | `ADMIN_KEY`     | 管理员访问密码（可选）     |
 
-   `GITHUB_OWNER` 是 Worker 定位你 Fork 所必需的设置，只需在仪表盘填一次，无需改源码。`wrangler.toml` 的 `keep_vars = true` 会保留这些变量。
+   `GH_OWNER` 是 Worker 定位你 Fork 所必需的设置，只需在仪表盘填一次，无需改源码。Cloudflare 禁止变量或 Secret 名称以 `GITHUB_` 开头；`wrangler.toml` 的 `keep_vars = true` 会保留这些设置。
 
-   已部署旧版本的用户：将已有 GitHub token 以新 Secret 名称 `GH_TOKEN` 添加并重新部署。新版 Worker 只读取 `GH_TOKEN`；如果旧设置中存在 `GITHUB_TOKEN`，可删除。
+   已部署旧版本的用户：将变量改名为 `GH_OWNER`、`GH_REPO`、`GH_BRANCH`，并将 token Secret 改名为 `GH_TOKEN`，保留原有值后重新部署。新版 Worker 只读取这些 `GH_` 名称；旧的 `GITHUB_` 设置可删除。
 4. 在 **Settings → Build → Build watch paths** 将 **Include paths** 设为 `*`、**Exclude paths** 设为 `List/*`，避免每次创建短链时都重新部署。然后在 **Settings → Domains & Routes** 启用 `workers.dev` 或添加自己的域名。
 5. 打开 Worker 地址，确认服务已连接并创建一条测试短链。后续推送源码到 `main` 会自动重新部署；Action 只更新 `List/` 时会被路径过滤忽略。
 
@@ -61,7 +61,7 @@ npx wrangler secret put ADMIN_KEY
 npx wrangler deploy
 ```
 
-`GITHUB_OWNER`、`GITHUB_REPO` 和 `GITHUB_BRANCH` 仍在 Cloudflare 的 **Settings → Variables and Secrets** 设置，`keep_vars = true` 会在 Wrangler 发布时保留它们。`ADMIN_KEY` 可选；不设置时访客模式仍可创建随机短码。真实密码不要提交到仓库。
+`GH_OWNER`、`GH_REPO` 和 `GH_BRANCH` 仍在 Cloudflare 的 **Settings → Variables and Secrets** 设置，`keep_vars = true` 会在 Wrangler 发布时保留它们。`ADMIN_KEY` 可选；不设置时访客模式仍可创建随机短码。真实密码不要提交到仓库。
 
 ## 6. GitHub Actions 配置
 
@@ -86,9 +86,9 @@ npx wrangler deploy
 创建本地文件 `.dev.vars`（该文件已加入 `.gitignore`）：
 
 ```dotenv
-GITHUB_OWNER=你的 GitHub 用户名或组织名
-GITHUB_REPO=Zink
-GITHUB_BRANCH=main
+GH_OWNER=你的 GitHub 用户名或组织名
+GH_REPO=Zink
+GH_BRANCH=main
 GH_TOKEN=你的 Fine-grained token
 ADMIN_KEY=你的管理员访问密码
 ```
@@ -113,7 +113,7 @@ Action 将创建请求中的来源 IP 写入 `List/{短码}`。线上 IP 取自 
 
 | 现象                        | 检查项                                                                                                      |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 页面显示“等待部署配置”      | 检查 `GITHUB_OWNER`、`GITHUB_REPO`、`GITHUB_BRANCH` 和 `GH_TOKEN` Secret。                                  |
+| 页面显示“等待部署配置”      | 检查 `GH_OWNER`、`GH_REPO`、`GH_BRANCH` 和 `GH_TOKEN` Secret。                                              |
 | 管理员密码无法验证          | 用 `npx wrangler secret put ADMIN_KEY` 更新 Secret，再重新部署或等待 Secret 生效。                          |
 | 创建返回 GitHub 配置错误    | 检查仓库拼写、分支名、Token 有效期与 `Contents: Read and write` 权限。                                      |
 | Action 无法启动或状态不可见 | 检查 GitHub Actions 是否启用，以及 token 的 `Actions: Read-only` 权限。                                     |

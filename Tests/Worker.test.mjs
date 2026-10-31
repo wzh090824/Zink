@@ -10,6 +10,10 @@ const { default: worker } = await import(
   `data:text/javascript;base64,${Buffer.from(workerSource).toString("base64")}`
 );
 
+test("Worker configuration avoids reserved GITHUB_ environment names", () => {
+  assert.doesNotMatch(workerSource, /env\.GITHUB_[A-Z_]+/);
+});
+
 function mappingFileName(code) {
   const safe =
     code !== "." &&
@@ -24,9 +28,9 @@ function mappingFileName(code) {
 test("access modes, Unicode short codes, Action status, and expiration", async (t) => {
   const records = new Map();
   const env = {
-    GITHUB_OWNER: "owner",
-    GITHUB_REPO: "links",
-    GITHUB_BRANCH: "main",
+    GH_OWNER: "owner",
+    GH_REPO: "links",
+    GH_BRANCH: "main",
     GH_TOKEN: "test-token",
     ADMIN_KEY: "test-admin-key",
     ASSETS: {
