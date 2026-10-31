@@ -41,7 +41,7 @@
 
 ## 5. 数据隐私
 
-Action 将创建请求中的来源 IP 写入 `List/{短码}`。线上 IP 取自 Cloudflare 的 `CF-Connecting-IP`，而不是访客可自行设置的普通 `X-Forwarded-For`。Action 同时写入 UTC 格式的 `uploadedAt` 时间。
+Action 将创建请求中的来源 IP 写入 `List/{短码}`。线上 IP 取自 Cloudflare 的 `CF-Connecting-IP`，而不是访客可自行设置的普通 `X-Forwarded-For`。`uploadedAt` 和 `expiresAt` 以 UTC 格式保存，页面显示和失效日期输入统一按北京时间（UTC+8）处理；失效日期可分别填写年月日，或选择 1、3、7、30、90 天，在所选日期北京时间 23:59:59 结束时失效。
 
 如果目标仓库是公开仓库，映射 JSON、来源 IP、目标网址、上传时间和 Git 提交历史均对公众可见。改为私有仓库不会清除已公开过的 Git 历史。部署者应提前告知访客并确认相应隐私要求；如需避免公开 IP，应使用私有仓库。
 

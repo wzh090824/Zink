@@ -1,6 +1,6 @@
 import { supportedLanguages, translate } from "./Translations.js";
 
-const languageSelect = document.querySelector("#language-select");
+const languageToggle = document.querySelector("#language-toggle");
 const themeToggle = document.querySelector("#theme-toggle");
 const githubLink = document.querySelector("#github-link");
 let locale = preferredLanguage();
@@ -24,8 +24,8 @@ function applyLanguage(language) {
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = t(element.dataset.i18n);
   });
-  languageSelect.value = locale;
-  languageSelect.setAttribute("aria-label", t("language"));
+  languageToggle.setAttribute("aria-label", t("languageSwitch"));
+  languageToggle.title = t("languageSwitch");
   githubLink.setAttribute("aria-label", t("githubProject"));
   githubLink.title = t("githubProject");
   updateThemeLabel();
@@ -67,8 +67,8 @@ try {
 
 applyLanguage(locale);
 setTheme(initialTheme);
-languageSelect.addEventListener("change", () =>
-  applyLanguage(languageSelect.value),
+languageToggle.addEventListener("click", () =>
+  applyLanguage(locale === "zh-CN" ? "en" : "zh-CN"),
 );
 themeToggle.addEventListener("click", () =>
   setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"),

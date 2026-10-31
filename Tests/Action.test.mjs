@@ -27,6 +27,7 @@ test("GitHub Action writes metadata and refuses filename collisions", async () =
   );
 
   const code = "NUL";
+  const target = `https://example.com/中文?q=${"value=测试&".repeat(100)}`;
   const calls = [];
   const github = {
     rest: {
@@ -61,7 +62,7 @@ test("GitHub Action writes metadata and refuses filename collisions", async () =
       client_payload: {
         requestId: "12345678-1234-4234-8234-123456789abc",
         code,
-        url: "https://example.com/",
+        url: target,
         ip: "203.0.113.12",
         expiresAt: null,
         branch: "main",
@@ -87,7 +88,7 @@ test("GitHub Action writes metadata and refuses filename collisions", async () =
   const blob = calls.find((call) => call.type === "blob");
   const record = JSON.parse(blob.content);
   assert.equal(record.code, code);
-  assert.equal(record.url, "https://example.com/");
+  assert.equal(record.url, target);
   assert.equal(record.ip, "203.0.113.12");
   assert.ok(Number.isFinite(Date.parse(record.uploadedAt)));
   const tree = calls.find((call) => call.type === "tree");

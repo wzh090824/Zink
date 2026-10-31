@@ -21,7 +21,7 @@ const notFoundHtml = await readFile(
 test("Chinese and English translations cover both pages", () => {
   assert.deepEqual(supportedLanguages, ["zh-CN", "en"]);
   const keys = new Set(
-    [...`${pageHtml}\n${notFoundHtml}`.matchAll(/data-i18n(?:-placeholder)?="([^"]+)"/g)].map(
+    [...`${pageHtml}\n${notFoundHtml}`.matchAll(/data-i18n(?:-placeholder|-aria-label)?="([^"]+)"/g)].map(
       (match) => match[1],
     ),
   );
@@ -29,6 +29,9 @@ test("Chinese and English translations cover both pages", () => {
     "adminSignIn",
     "themeToDark",
     "themeToLight",
+    "languageSwitch",
+    "errorExpiryIncomplete",
+    "errorExpiryInvalid",
     "githubProject",
     "adminFormNote",
     "guestFormNote",
@@ -55,7 +58,19 @@ test("Chinese and English translations cover both pages", () => {
   assert.match(pageHtml, /id="service-status"[^>]*data-i18n="serviceChecking"/);
   assert.match(pageHtml, /href="https:\/\/github\.com\/wzh090824\/Zink"/);
   assert.match(notFoundHtml, /href="https:\/\/github\.com\/wzh090824\/Zink"/);
-  assert.equal(translate("en", "uploadedAt", { time: "12:30" }), "Uploaded: 12:30");
+  assert.match(pageHtml, /<button\b(?=[^>]*\bid="language-toggle")(?=[^>]*\bclass="language-toggle")[^>]*>/);
+  assert.match(pageHtml, /<button\b(?=[^>]*\bid="access-language-toggle")(?=[^>]*\bclass="language-toggle")[^>]*>/);
+  assert.match(notFoundHtml, /<button\b(?=[^>]*\bid="language-toggle")(?=[^>]*\bclass="language-toggle")[^>]*>/);
+  assert.doesNotMatch(`${pageHtml}\n${notFoundHtml}`, /language-select|access-language-select/);
+  assert.match(pageHtml, /id="expiry-year"[\s\S]*id="expiry-month"[\s\S]*id="expiry-day"/);
+  assert.match(pageHtml, /id="expiry-preset"/);
+  assert.match(pageHtml, /data-i18n="beijingOptional"/);
+  assert.doesNotMatch(pageHtml.match(/id="target-url"[\s\S]*?\/>/)?.[0] || "", /maxlength=/);
+  assert.doesNotMatch(`${translationSource}\n${pageHtml}\n${notFoundHtml}`, /300 characters|300 个字符/);
+  assert.equal(
+    translate("en", "uploadedAt", { time: "12:30" }),
+    "Uploaded: 12:30 (Beijing time)",
+  );
 });
 
 test("build status is displayed without GitHub Action links", () => {

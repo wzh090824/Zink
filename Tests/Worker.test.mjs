@@ -221,6 +221,19 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
     "https://example.net/dot-code",
   );
 
+  const longTarget = `https://example.org/中文路径?q=${"测试&value=abc%20".repeat(100)}`;
+  const longCreate = await create({ url: longTarget });
+  assert.equal(longCreate.status, 202);
+  const longLink = await longCreate.json();
+  assert.equal(lastDispatch.url, longTarget);
+  records.set(`List/${longLink.code}`, { url: longTarget });
+  const longRedirect = await request(`/${longLink.code}`);
+  assert.equal(longRedirect.status, 302);
+  assert.equal(longRedirect.headers.get("Location"), new URL(longTarget).href);
+
+  const unsafeTarget = await create({ url: "javascript:alert(1)" });
+  assert.equal(unsafeTarget.status, 400);
+
   const invalidActionId = await request("/__api/actions?requestId=invalid");
   assert.equal(invalidActionId.status, 400);
 });

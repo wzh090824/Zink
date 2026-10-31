@@ -28,8 +28,8 @@ jobs:
             const target = typeof payload.url === 'string' ? payload.url : '';
             let parsed;
             try { parsed = new URL(target); } catch {}
-            if (!parsed || !['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password || target.length > 300) {
-              core.setFailed('Target URL must be HTTP(S), contain no credentials, and fit within 300 characters.');
+            if (!parsed || !['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) {
+              core.setFailed('Target URL must be HTTP(S) and contain no credentials.');
               return;
             }
 

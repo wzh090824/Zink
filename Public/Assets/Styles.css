@@ -63,7 +63,8 @@ body {
     color 820ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 button,
-input {
+input,
+select {
   font: inherit;
 }
 button,
@@ -72,7 +73,8 @@ a {
 }
 button:focus-visible,
 a:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--ring) 55%, transparent);
   outline-offset: 2px;
 }
@@ -148,18 +150,7 @@ input:focus-visible {
   justify-self: end;
   gap: 8px;
 }
-.language-select {
-  width: 112px;
-  height: 36px;
-  padding: 0 9px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--ink-soft);
-  background: var(--surface);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
+.language-toggle,
 .theme-toggle {
   width: 36px;
   height: 36px;
@@ -192,9 +183,28 @@ input:focus-visible {
   height: 18px;
   fill: currentColor;
 }
+.language-toggle:hover,
 .theme-toggle:hover {
   color: var(--ink);
   background: var(--surface-muted);
+}
+.language-icon {
+  grid-area: 1 / 1;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    opacity 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.language-icon-en,
+:root:lang(en) .language-icon-zh {
+  opacity: 0;
+  transform: translateY(5px) scale(0.8);
+}
+:root:lang(en) .language-icon-en {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 .theme-icon {
   width: 18px;
@@ -263,6 +273,47 @@ input:focus-visible {
 .field-detail {
   color: var(--ink-soft);
   font-weight: 400;
+}
+.expiry-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.field-label {
+  color: var(--ink);
+  font-weight: 500;
+}
+.expiry-preset {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  background: var(--surface);
+  font-size: 13px;
+  cursor: pointer;
+}
+.expiry-date-fields {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.date-part {
+  min-width: 0;
+}
+.date-part label {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.date-part input {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 .field-group input,
 .input-with-prefix {
@@ -762,7 +813,11 @@ body,
 .guest-code-note,
 .access-badge,
 .change-mode-button,
-.language-select,
+.language-toggle,
+.expiry-preset,
+.field-label,
+.field-hint,
+.field-detail,
 .theme-toggle,
 .github-link,
 .submit-button,

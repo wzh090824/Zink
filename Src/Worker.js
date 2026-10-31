@@ -127,8 +127,8 @@ async function createLink(request, env) {
       {
         error: localized(
           request,
-          "目标网址必须是有效的 HTTP 或 HTTPS 网址，且不超过 300 个字符。",
-          "Destination must be a valid HTTP or HTTPS URL no longer than 300 characters.",
+          "目标网址必须是有效的 HTTP 或 HTTPS 网址。",
+          "Destination must be a valid HTTP or HTTPS URL.",
         ),
       },
       400,
@@ -427,7 +427,7 @@ async function redirectForCode(code, request, env) {
     if (!Number.isFinite(expiryTime) || Date.now() >= expiryTime)
       return notFound(request, env);
   }
-  return Response.redirect(result.url, 302);
+  return Response.redirect(new URL(result.url).href, 302);
 }
 
 async function getGithubFile(code, env, directory = "List") {
@@ -574,7 +574,7 @@ function githubHeaders(token) {
 }
 
 function validTarget(value) {
-  if (typeof value !== "string" || value.length > 300) return false;
+  if (typeof value !== "string") return false;
   try {
     const target = new URL(value);
     return (

@@ -1,9 +1,14 @@
 import { supportedLanguages, translate } from "./Translations.js";
+import { beijingDateAfter, beijingExpiry, formatBeijingTime } from "./Dates.js";
 
 const form = document.querySelector("#create-form");
 const urlInput = document.querySelector("#target-url");
 const codeInput = document.querySelector("#short-code");
-const expiryInput = document.querySelector("#expires-at");
+const expiryPreset = document.querySelector("#expiry-preset");
+const expiryYear = document.querySelector("#expiry-year");
+const expiryMonth = document.querySelector("#expiry-month");
+const expiryDay = document.querySelector("#expiry-day");
+const expiryInputs = [expiryYear, expiryMonth, expiryDay];
 const errorBox = document.querySelector("#form-error");
 const submitButton = document.querySelector("#submit-button");
 const accessDialog = document.querySelector("#access-dialog");
@@ -12,8 +17,7 @@ const accessError = document.querySelector("#access-error");
 const adminAccessButton = document.querySelector("#admin-access-button");
 const customCodeField = document.querySelector("#custom-code-field");
 const guestCodeNote = document.querySelector("#guest-code-note");
-const languageSelect = document.querySelector("#language-select");
-const accessLanguageSelect = document.querySelector("#access-language-select");
+const languageButtons = document.querySelectorAll(".language-toggle");
 const themeToggle = document.querySelector("#theme-toggle");
 const githubLink = document.querySelector("#github-link");
 const buildDialog = document.querySelector("#build-dialog");
@@ -30,6 +34,7 @@ let locale = preferredLanguage();
 let accessMode = null;
 let adminKey = "";
 let actionPollToken = 0;
+let lastUploadedAt = "";
 
 function preferredLanguage() {
   try {
@@ -53,10 +58,18 @@ function applyLanguage(language) {
   document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
     element.placeholder = t(element.dataset.i18nPlaceholder);
   });
-  languageSelect.value = locale;
-  accessLanguageSelect.value = locale;
-  languageSelect.setAttribute("aria-label", t("language"));
-  accessLanguageSelect.setAttribute("aria-label", t("language"));
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
+    element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel));
+  });
+  languageButtons.forEach((button) => {
+    button.setAttribute("aria-label", t("languageSwitch"));
+    button.title = t("languageSwitch");
+  });
+  if (lastUploadedAt) {
+    uploadedAt.textContent = t("uploadedAt", {
+      time: formatBeijingTime(lastUploadedAt, locale),
+    });
+  }
   githubLink.setAttribute("aria-label", t("githubProject"));
   githubLink.title = t("githubProject");
   document.querySelector("#access-badge").textContent = t(
@@ -111,18 +124,47 @@ try {
 }
 applyLanguage(locale);
 setTheme(initialTheme);
-languageSelect.addEventListener("change", () =>
-  applyLanguage(languageSelect.value),
-);
-accessLanguageSelect.addEventListener("change", () =>
-  applyLanguage(accessLanguageSelect.value),
-);
+languageButtons.forEach((button) => {
+  button.addEventListener("click", () =>
+    applyLanguage(locale === "zh-CN" ? "en" : "zh-CN"),
+  );
+});
 themeToggle.addEventListener("click", () =>
   setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"),
 );
 
 document.querySelector("#origin-prefix").textContent =
   `${window.location.host}/`;
+
+expiryPreset.addEventListener("change", () => {
+  errorBox.hidden = true;
+  if (expiryPreset.value === "custom") {
+    expiryYear.focus();
+  } else if (!expiryPreset.value) {
+    expiryInputs.forEach((input) => {
+      input.value = "";
+    });
+  } else {
+    const date = beijingDateAfter(Number(expiryPreset.value));
+    expiryYear.value = date.year;
+    expiryMonth.value = date.month;
+    expiryDay.value = date.day;
+  }
+});
+expiryInputs.forEach((input) => {
+  input.addEventListener("input", () => {
+    errorBox.hidden = true;
+    expiryPreset.value = expiryInputs.some((field) => field.value.trim())
+      ? "custom"
+      : "";
+  });
+});
+urlInput.addEventListener("input", () => {
+  errorBox.hidden = true;
+});
+codeInput.addEventListener("input", () => {
+  errorBox.hidden = true;
+});
 
 function requestHeaders(headers = {}) {
   return { ...headers, "Accept-Language": locale };
@@ -263,6 +305,7 @@ function startBuildAnimation() {
   buildDialogTitle.textContent = t("buildTitle");
   buildStatus.textContent = t("statusWaiting");
   uploadedAt.hidden = true;
+  lastUploadedAt = "";
   if (!buildDialog.open) buildDialog.showModal();
 }
 
@@ -315,11 +358,10 @@ async function watchAction(requestId, code, requestedAt) {
       setBuildState(data.state);
       if (data.state === "success") {
         if (data.uploadedAt) {
-          const time = new Date(data.uploadedAt);
-          const formatted = Number.isNaN(time.getTime())
-            ? data.uploadedAt
-            : time.toLocaleString(locale);
-          uploadedAt.textContent = t("uploadedAt", { time: formatted });
+          lastUploadedAt = data.uploadedAt;
+          uploadedAt.textContent = t("uploadedAt", {
+            time: formatBeijingTime(lastUploadedAt, locale),
+          });
           uploadedAt.hidden = false;
         }
         return;
@@ -337,7 +379,7 @@ form.addEventListener("submit", async (event) => {
 
   const url = urlInput.value.trim();
   const code = accessMode === "admin" ? codeInput.value.normalize("NFC") : "";
-  if (!validUrl(url) || url.length > 300) return showError(t("errorUrl"));
+  if (!validUrl(url)) return showError(t("errorUrl"));
   if (accessMode !== "admin" && accessMode !== "guest")
     return showError(t("errorChooseAccess"));
   if (
@@ -348,12 +390,21 @@ form.addEventListener("submit", async (event) => {
     return showError(t("errorCodeLength"));
   }
 
-  let expiresAt = null;
-  if (expiryInput.value) {
-    const date = new Date(expiryInput.value);
-    if (Number.isNaN(date.getTime()) || date.getTime() <= Date.now())
-      return showError(t("errorExpiry"));
-    expiresAt = date.toISOString();
+  let expiresAt;
+  try {
+    expiresAt = beijingExpiry(
+      expiryYear.value,
+      expiryMonth.value,
+      expiryDay.value,
+    );
+  } catch (error) {
+    const key =
+      error.message === "incomplete"
+        ? "errorExpiryIncomplete"
+        : error.message === "past"
+          ? "errorExpiry"
+          : "errorExpiryInvalid";
+    return showError(t(key));
   }
 
   submitButton.disabled = true;
@@ -373,7 +424,10 @@ form.addEventListener("submit", async (event) => {
     buildResultLink.textContent = data.shortUrl;
     startBuildAnimation();
     codeInput.value = "";
-    expiryInput.value = "";
+    expiryPreset.value = "";
+    expiryInputs.forEach((input) => {
+      input.value = "";
+    });
     void watchAction(data.requestId, data.code, data.requestedAt);
   } catch (error) {
     showError(error.message || t("unknownError"));
