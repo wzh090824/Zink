@@ -40,7 +40,7 @@ GitHub 仓库：[wzh090824/Zink](https://github.com/wzh090824/Zink)
 快速概览：
 
 1. Fork [Zink 仓库](https://github.com/wzh090824/Zink) 到自己的 GitHub 账号。
-2. 为 Fork 创建仅授予 `Contents: Read and write`、`Actions: Read-only`、`Metadata: Read-only` 权限的 Fine-grained token。
+2. 为 Fork 创建仅授予 `Contents: Read and write`、`Actions: Read-only`、`Metadata: Read-only` 权限的 Fine-grained token，并将它作为 Cloudflare Secret `GH_TOKEN` 保存。
 3. 在 Cloudflare 网页仪表盘连接自己的 Fork，设置仓库变量和 Token；完整步骤见 [部署指南](Deployment.md)。
 
 ## 项目结构与命名

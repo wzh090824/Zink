@@ -27,7 +27,7 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
     GITHUB_OWNER: "owner",
     GITHUB_REPO: "links",
     GITHUB_BRANCH: "main",
-    GITHUB_TOKEN: "test-token",
+    GH_TOKEN: "test-token",
     ADMIN_KEY: "test-admin-key",
     ASSETS: {
       fetch: async (request) =>

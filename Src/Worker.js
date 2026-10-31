@@ -10,7 +10,7 @@ export default {
     if (url.pathname === `${API}/health` && request.method === "GET") {
       const repositoryConfigured = hasRepository(env);
       return jsonResponse({
-        ready: Boolean(repositoryConfigured && env.GITHUB_TOKEN),
+        ready: Boolean(repositoryConfigured && env.GH_TOKEN),
         adminEnabled: Boolean(env.ADMIN_KEY),
         repository: repositoryConfigured
           ? `${env.GITHUB_OWNER}/${env.GITHUB_REPO}`
@@ -77,7 +77,7 @@ async function verifyAdminAccess(request, env) {
 }
 
 async function createLink(request, env) {
-  if (!env.GITHUB_TOKEN || !hasRepository(env)) {
+  if (!env.GH_TOKEN || !hasRepository(env)) {
     return jsonResponse(
       {
         error: localized(
@@ -211,7 +211,7 @@ async function createLink(request, env) {
     );
 
   const requestId = crypto.randomUUID();
-  const headers = githubHeaders(env.GITHUB_TOKEN);
+  const headers = githubHeaders(env.GH_TOKEN);
   const dispatchUrl = `https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/dispatches`;
   let dispatch;
   try {
@@ -278,7 +278,7 @@ async function createLink(request, env) {
 }
 
 async function getActionStatus(request, url, env) {
-  if (!env.GITHUB_TOKEN || !hasRepository(env))
+  if (!env.GH_TOKEN || !hasRepository(env))
     return jsonResponse(
       {
         error: localized(
@@ -306,7 +306,7 @@ async function getActionStatus(request, url, env) {
   let response;
   try {
     response = await fetch(runsUrl, {
-      headers: githubHeaders(env.GITHUB_TOKEN),
+      headers: githubHeaders(env.GH_TOKEN),
     });
   } catch {
     return jsonResponse(
@@ -429,7 +429,7 @@ async function getGithubFile(code, env, directory = "List") {
   const endpoint = `https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/contents/${filePath}${env.GITHUB_BRANCH ? `?ref=${encodeURIComponent(env.GITHUB_BRANCH)}` : ""}`;
   try {
     const response = await fetch(endpoint, {
-      headers: githubHeaders(env.GITHUB_TOKEN),
+      headers: githubHeaders(env.GH_TOKEN),
     });
     if (response.status === 404) return { kind: "missing" };
     if (!response.ok) return { kind: "error" };

@@ -23,7 +23,7 @@ GitHub 通常会暂停 Fork 中的 Actions。若仓库 **Actions** 页面显示�
    - **Contents: Read and write**：Worker 查询映射、Action 写入文件。
    - **Actions: Read-only**：Worker 读取本次 Action 的实时状态。
    - **Metadata: Read-only**：GitHub API 要求的仓库元数据权限。
-4. 创建后复制 token。它只用于下一节保存到 Cloudflare Secret，不要写入源代码、`wrangler.toml`、README 或 GitHub Actions 文件。
+4. 创建后复制 token。它只用于下一节保存到 Cloudflare Secret `GH_TOKEN`，不要写入源代码、`wrangler.toml`、README 或 GitHub Actions 文件。Cloudflare 不允许 Secret 名称以 `GITHUB_` 开头。
 
 Fine-grained token 的有效期应按自己的凭据轮换策略设置。Token 到期后，短链查询、创建和 Action 状态读取都会受到影响。
 
@@ -38,7 +38,7 @@ Fine-grained token 的有效期应按自己的凭据轮换策略设置。Token �
    | Variable | `GITHUB_OWNER`  | 你的 GitHub 用户名         |
    | Variable | `GITHUB_REPO`   | `Zink`                     |
    | Variable | `GITHUB_BRANCH` | `main`                     |
-   | Secret   | `GITHUB_TOKEN`  | 上一节创建的 Fine-grained token |
+   | Secret   | `GH_TOKEN`      | 上一节创建的 Fine-grained token |
    | Secret   | `ADMIN_KEY`     | 管理员访问密码（可选）     |
 
    `GITHUB_OWNER` 是 Worker 定位你 Fork 所必需的设置，只需在仪表盘填一次，无需改源码。`wrangler.toml` 的 `keep_vars = true` 会保留这些变量。
@@ -54,7 +54,7 @@ Fine-grained token 的有效期应按自己的凭据轮换策略设置。Token �
 ```sh
 npm install --save-dev wrangler
 npx wrangler login
-npx wrangler secret put GITHUB_TOKEN
+npx wrangler secret put GH_TOKEN
 npx wrangler secret put ADMIN_KEY
 npx wrangler deploy
 ```
@@ -87,7 +87,7 @@ npx wrangler deploy
 GITHUB_OWNER=你的 GitHub 用户名或组织名
 GITHUB_REPO=Zink
 GITHUB_BRANCH=main
-GITHUB_TOKEN=你的 Fine-grained token
+GH_TOKEN=你的 Fine-grained token
 ADMIN_KEY=你的管理员访问密码
 ```
 
@@ -111,7 +111,7 @@ Action 将创建请求中的来源 IP 写入 `List/{短码}`。线上 IP 取自 
 
 | 现象                        | 检查项                                                                                                      |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 页面显示“等待部署配置”      | 检查 `GITHUB_OWNER`、`GITHUB_REPO`、`GITHUB_BRANCH` 和 `GITHUB_TOKEN` Secret。                              |
+| 页面显示“等待部署配置”      | 检查 `GITHUB_OWNER`、`GITHUB_REPO`、`GITHUB_BRANCH` 和 `GH_TOKEN` Secret。                                  |
 | 管理员密码无法验证          | 用 `npx wrangler secret put ADMIN_KEY` 更新 Secret，再重新部署或等待 Secret 生效。                          |
 | 创建返回 GitHub 配置错误    | 检查仓库拼写、分支名、Token 有效期与 `Contents: Read and write` 权限。                                      |
 | Action 无法启动或状态不可见 | 检查 GitHub Actions 是否启用，以及 token 的 `Actions: Read-only` 权限。                                     |
