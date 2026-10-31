@@ -252,7 +252,20 @@
       </div>
       <p class="uploaded-at" id="uploaded-at" hidden></p>
       <div class="build-dialog-actions">
-        <button class="copy-button" id="copy-link" type="button" data-i18n="copyLink">复制短链</button>
+        <button
+          class="copy-button"
+          id="copy-link"
+          type="button"
+          data-state="idle"
+          data-i18n-aria-label="copyLink"
+          aria-label="复制短链"
+          aria-live="polite"
+        >
+          <span class="copy-button-label" data-i18n="copyLink">复制短链</span>
+          <svg class="copy-button-check" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m4 12.5 5.2 5.2L20 6.8"></path>
+          </svg>
+        </button>
       </div>
     </dialog>
   </body>

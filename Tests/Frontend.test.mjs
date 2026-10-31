@@ -94,6 +94,9 @@ test("Chinese and English translations cover both pages", () => {
   assert.match(pageHtml, /id="site-settings-form"/);
   assert.match(pageHtml, /id="site-settings-dialog"/);
   assert.match(pageHtml, /id="site-settings-language-toggle"/);
+  assert.match(pageHtml, /id="copy-link"[^>]*data-i18n-aria-label="copyLink"/);
+  assert.match(pageHtml, /class="copy-button-label" data-i18n="copyLink"/);
+  assert.match(pageHtml, /class="copy-button-check"[\s\S]*?<path d="m4 12\.5 5\.2 5\.2L20 6\.8"/);
   assert.equal(
     translate("en", "uploadedAt", { time: "12:30" }),
     "Uploaded: 12:30 (Beijing time)",

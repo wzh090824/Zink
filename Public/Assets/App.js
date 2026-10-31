@@ -46,6 +46,7 @@ let accessMode = null;
 let adminKey = "";
 let actionPollToken = 0;
 let lastUploadedAt = "";
+let copyResetTimer = 0;
 let currentBuildKind = "short-link";
 let siteSettings = { registrationNumber: "", policeRegistrationNumber: "" };
 
@@ -77,6 +78,10 @@ function applyLanguage(language) {
   document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
     element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel));
   });
+  copyButton.setAttribute(
+    "aria-label",
+    t(copyButton.dataset.state === "copied" ? "copied" : "copyLink"),
+  );
   languageButtons.forEach((button) => {
     button.setAttribute("aria-label", t("languageSwitch"));
     button.title = t("languageSwitch");
@@ -588,10 +593,16 @@ form.addEventListener("submit", async (event) => {
 copyButton.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(buildResultLink.href);
-    copyButton.textContent = t("copied");
-    window.setTimeout(() => {
-      copyButton.textContent = t("copyLink");
-    }, 1600);
+    copyButton.dataset.state = "idle";
+    void copyButton.offsetWidth;
+    copyButton.dataset.state = "copied";
+    copyButton.setAttribute("aria-label", t("copied"));
+    window.clearTimeout(copyResetTimer);
+    copyResetTimer = window.setTimeout(() => {
+      copyButton.dataset.state = "idle";
+      copyButton.setAttribute("aria-label", t("copyLink"));
+      copyResetTimer = 0;
+    }, 1500);
   } catch {
     showError(t("copyUnavailable"));
   }
