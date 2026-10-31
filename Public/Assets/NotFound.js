@@ -54,6 +54,26 @@ function setTheme(theme) {
   } catch {}
 }
 
+async function loadSiteSettings() {
+  try {
+    const response = await fetch("/__api/site-settings", {
+      headers: { "Accept-Language": locale },
+    });
+    if (!response.ok) return;
+    const settings = await response.json();
+    const entries = [
+      ["registration-number", settings.registrationNumber],
+      ["police-registration-number", settings.policeRegistrationNumber],
+    ];
+    entries.forEach(([id, value]) => {
+      const element = document.getElementById(id);
+      if (typeof value !== "string" || !value) return;
+      element.textContent = value;
+      element.hidden = false;
+    });
+  } catch {}
+}
+
 let initialTheme = "light";
 try {
   initialTheme =
@@ -67,6 +87,7 @@ try {
 
 applyLanguage(locale);
 setTheme(initialTheme);
+loadSiteSettings();
 languageToggle.addEventListener("click", () =>
   applyLanguage(locale === "zh-CN" ? "en" : "zh-CN"),
 );

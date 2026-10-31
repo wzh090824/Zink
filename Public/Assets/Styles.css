@@ -467,18 +467,38 @@ select:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  color: var(--muted);
+  font-family: ui-serif, Georgia, "Noto Serif SC", serif;
+  font-size: 11px;
+}
+.footer-brand {
+  display: inline-flex;
+  flex: none;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.footer-brand-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+.footer-brand-by {
   color: var(--muted);
   font-size: 10px;
+  font-weight: 500;
 }
-.page-footer span + span::before {
-  content: "|";
-  margin-right: 9px;
-  color: var(--line);
+.footer-brand:hover .footer-brand-name {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 .page-footer .site-registration {
   color: var(--ink-soft);
   overflow-wrap: anywhere;
+  font-size: 10px;
 }
 
 .error-shell {
@@ -999,10 +1019,9 @@ body,
     padding: 20px;
   }
   .page-footer {
-    flex-wrap: wrap;
-    gap: 5px 8px;
+    gap: 5px 9px;
     padding: 8px 0;
-    font-size: 9px;
+    font-size: 10px;
   }
 }
 

@@ -21,6 +21,10 @@ const appSource = await readFile(
   new URL("../Public/Assets/App.js", import.meta.url),
   "utf8",
 );
+const notFoundSource = await readFile(
+  new URL("../Public/Assets/NotFound.js", import.meta.url),
+  "utf8",
+);
 const stylesheet = await readFile(
   new URL("../Public/Assets/Styles.css", import.meta.url),
   "utf8",
@@ -107,6 +111,15 @@ test("Chinese and English translations cover both pages", () => {
   assert.match(pageHtml, /id="footer-settings-button"[^>]*hidden/);
   assert.match(pageHtml, /id="registration-number" hidden/);
   assert.match(pageHtml, /id="police-registration-number" hidden/);
+  assert.match(
+    pageHtml,
+    /<a class="footer-brand" href="https:\/\/github\.com\/wzh090824\/Zink"[\s\S]*?<span class="footer-brand-name">Zink<\/span>[\s\S]*?<span class="footer-brand-by">By ZSFan<\/span>/,
+  );
+  assert.match(notFoundHtml, /<a class="footer-brand" href="https:\/\/github\.com\/wzh090824\/Zink"[\s\S]*?<span class="footer-brand-by">By ZSFan<\/span>/);
+  assert.match(notFoundHtml, /id="registration-number" hidden/);
+  assert.match(notFoundHtml, /id="police-registration-number" hidden/);
+  assert.match(notFoundSource, /fetch\("\/__api\/site-settings"/);
+  assert.doesNotMatch(`${pageHtml}\n${notFoundHtml}`, /footerNoDatabase|footerStorage/);
   assert.match(pageHtml, /id="site-settings-form"/);
   assert.match(pageHtml, /id="site-settings-dialog"/);
   assert.match(pageHtml, /id="site-settings-language-toggle"/);
