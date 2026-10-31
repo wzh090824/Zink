@@ -2,6 +2,7 @@ import { supportedLanguages, translate } from "./Translations.js";
 
 const languageSelect = document.querySelector("#language-select");
 const themeToggle = document.querySelector("#theme-toggle");
+const githubLink = document.querySelector("#github-link");
 let locale = preferredLanguage();
 
 function preferredLanguage() {
@@ -25,6 +26,8 @@ function applyLanguage(language) {
   });
   languageSelect.value = locale;
   languageSelect.setAttribute("aria-label", t("language"));
+  githubLink.setAttribute("aria-label", t("githubProject"));
+  githubLink.title = t("githubProject");
   updateThemeLabel();
   try {
     localStorage.setItem("shortlink-language", locale);

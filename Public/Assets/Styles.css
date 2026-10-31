@@ -172,6 +172,26 @@ input:focus-visible {
   background: var(--surface);
   cursor: pointer;
 }
+.github-link {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink-soft);
+  background: var(--surface);
+}
+.github-link:hover {
+  color: var(--ink);
+  background: var(--surface-muted);
+}
+.github-link svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
 .theme-toggle:hover {
   color: var(--ink);
   background: var(--surface-muted);
@@ -744,6 +764,7 @@ body,
 .change-mode-button,
 .language-select,
 .theme-toggle,
+.github-link,
 .submit-button,
 .form-note,
 .page-footer,

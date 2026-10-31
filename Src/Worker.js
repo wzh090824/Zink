@@ -211,6 +211,7 @@ async function createLink(request, env) {
     );
 
   const requestId = crypto.randomUUID();
+  const requestedAt = new Date().toISOString();
   const headers = githubHeaders(env.GH_TOKEN);
   const dispatchUrl = `https://api.github.com/repos/${encodeURIComponent(env.GH_OWNER)}/${encodeURIComponent(env.GH_REPO)}/dispatches`;
   let dispatch;
@@ -222,6 +223,7 @@ async function createLink(request, env) {
         event_type: "create_short_link",
         client_payload: {
           requestId,
+          requestedAt,
           code,
           url: target,
           expiresAt: expiresAt || null,
@@ -271,6 +273,7 @@ async function createLink(request, env) {
       accepted: true,
       code,
       requestId,
+      requestedAt,
       shortUrl: `${new URL(request.url).origin}/${routeSegmentForCode(code)}`,
     },
     202,
@@ -293,6 +296,12 @@ async function getActionStatus(request, url, env) {
   if (!REQUEST_ID_PATTERN.test(requestId))
     return jsonResponse(
       { error: localized(request, "请求编号无效。", "Invalid request ID.") },
+      400,
+    );
+  const requestedAt = Date.parse(url.searchParams.get("requestedAt") || "");
+  if (!Number.isFinite(requestedAt))
+    return jsonResponse(
+      { error: localized(request, "请求时间无效。", "Invalid request time.") },
       400,
     );
 
@@ -334,7 +343,9 @@ async function getActionStatus(request, url, env) {
   const data = await response.json();
   const code = url.searchParams.get("code") || "";
   const run = (data.workflow_runs || []).find(
-    (item) => item.display_title === `Short-${code}`,
+    (item) =>
+      item.display_title === `Short-${code}` &&
+      Date.parse(item.created_at || "") >= requestedAt,
   );
   if (!run)
     return jsonResponse({

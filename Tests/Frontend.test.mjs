@@ -29,6 +29,7 @@ test("Chinese and English translations cover both pages", () => {
     "adminSignIn",
     "themeToDark",
     "themeToLight",
+    "githubProject",
     "adminFormNote",
     "guestFormNote",
     "statusWaiting",
@@ -48,13 +49,17 @@ test("Chinese and English translations cover both pages", () => {
   }
   assert.equal(translate("en", "pageTitle"), "Zink | Create a short link");
   assert.equal(translate("zh-CN", "pageTitle"), "Zink | 创建短链");
+  assert.equal(translate("zh-CN", "serviceReady"), "Zink");
   assert.match(pageHtml, /<p class="site-label">Zink<\/p>/);
   assert.match(notFoundHtml, /<title>Zink \| 短链不存在<\/title>/);
+  assert.match(pageHtml, /id="service-status"[^>]*data-i18n="serviceChecking"/);
+  assert.match(pageHtml, /href="https:\/\/github\.com\/wzh090824\/Zink"/);
+  assert.match(notFoundHtml, /href="https:\/\/github\.com\/wzh090824\/Zink"/);
   assert.equal(translate("en", "uploadedAt", { time: "12:30" }), "Uploaded: 12:30");
 });
 
 test("build status is displayed without GitHub Action links", () => {
   assert.doesNotMatch(pageHtml, /id="action-link"|id="run-link"/);
-  assert.doesNotMatch(pageHtml, /href="https:\/\/github\.com/);
+  assert.doesNotMatch(pageHtml, /href="https:\/\/github\.com\/(?!wzh090824\/Zink)/);
   assert.doesNotMatch(pageHtml, /countdown-value|countdown-number/);
 });

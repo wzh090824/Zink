@@ -59,6 +59,10 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
           : [
               {
                 display_title: `Short-${lastDispatch.code}`,
+                created_at:
+                  runStatus === "stale"
+                    ? new Date(Date.parse(lastDispatch.requestedAt) - 1000).toISOString()
+                    : lastDispatch.requestedAt,
                 status: runStatus,
                 conclusion: runStatus === "completed" ? "success" : null,
               },
@@ -92,6 +96,11 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
       headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(body),
     });
+  const actionStatus = (data, code = data.code, headers = {}) =>
+    request(
+      `/__api/actions?requestId=${data.requestId}&code=${encodeURIComponent(code)}&requestedAt=${encodeURIComponent(data.requestedAt)}`,
+      { headers },
+    );
 
   const health = await request("/__api/health");
   assert.equal(health.status, 200);
@@ -131,28 +140,22 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
   assert.match(guest.code, /^[a-z2-9]{9}$/);
   assert.equal(lastDispatch.ip, "203.0.113.8");
   assert.equal(lastDispatch.code, guest.code);
-  assert.equal(
-    (
-      await request(
-        `/__api/actions?requestId=${guest.requestId}&code=${encodeURIComponent(guest.code)}`,
-      )
-    ).status,
-    200,
-  );
-  const waiting = await (
-    await request(
-      `/__api/actions?requestId=${guest.requestId}&code=${encodeURIComponent(guest.code)}`,
-    )
-  ).json();
+  assert.equal(lastDispatch.requestedAt, guest.requestedAt);
+  assert.equal((await actionStatus(guest)).status, 200);
+  const waiting = await (await actionStatus(guest)).json();
   assert.equal(waiting.state, "waiting");
-  const waitingEnglish = await request(
-    `/__api/actions?requestId=${guest.requestId}&code=${encodeURIComponent(guest.code)}`,
-    { headers: { "Accept-Language": "en" } },
-  );
+  const waitingEnglish = await actionStatus(guest, guest.code, {
+    "Accept-Language": "en",
+  });
   assert.equal(
     (await waitingEnglish.json()).message,
     "GitHub received the request and is starting the Action.",
   );
+
+  runStatus = "stale";
+  const staleRun = await (await actionStatus(guest)).json();
+  assert.equal(staleRun.state, "waiting");
+  runStatus = "waiting";
 
   const code = "我的/短链? #";
   const expiresAt = new Date(Date.now() + 60_000).toISOString();
@@ -181,25 +184,13 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
   assert.equal(redirect.headers.get("Location"), "https://example.org/path");
 
   runStatus = "queued";
-  const queued = await (
-    await request(
-      `/__api/actions?requestId=${admin.requestId}&code=${encodeURIComponent(code)}`,
-    )
-  ).json();
+  const queued = await (await actionStatus(admin, code)).json();
   assert.equal(queued.state, "queued");
   runStatus = "in_progress";
-  const running = await (
-    await request(
-      `/__api/actions?requestId=${admin.requestId}&code=${encodeURIComponent(code)}`,
-    )
-  ).json();
+  const running = await (await actionStatus(admin, code)).json();
   assert.equal(running.state, "running");
   runStatus = "completed";
-  const completed = await (
-    await request(
-      `/__api/actions?requestId=${admin.requestId}&code=${encodeURIComponent(code)}`,
-    )
-  ).json();
+  const completed = await (await actionStatus(admin, code)).json();
   assert.equal(completed.state, "success");
   assert.equal(completed.uploadedAt, uploadedAt);
   assert.equal(Object.hasOwn(completed, "runUrl"), false);

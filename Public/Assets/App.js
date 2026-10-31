@@ -15,6 +15,7 @@ const guestCodeNote = document.querySelector("#guest-code-note");
 const languageSelect = document.querySelector("#language-select");
 const accessLanguageSelect = document.querySelector("#access-language-select");
 const themeToggle = document.querySelector("#theme-toggle");
+const githubLink = document.querySelector("#github-link");
 const buildDialog = document.querySelector("#build-dialog");
 const buildDialogTitle = document.querySelector("#build-title");
 const buildStatus = document.querySelector("#build-status");
@@ -56,6 +57,8 @@ function applyLanguage(language) {
   accessLanguageSelect.value = locale;
   languageSelect.setAttribute("aria-label", t("language"));
   accessLanguageSelect.setAttribute("aria-label", t("language"));
+  githubLink.setAttribute("aria-label", t("githubProject"));
+  githubLink.title = t("githubProject");
   document.querySelector("#access-badge").textContent = t(
     accessMode ? (accessMode === "admin" ? "adminMode" : "guestMode") : "chooseAccess",
   );
@@ -292,7 +295,7 @@ document
   .querySelector("#close-build")
   .addEventListener("click", () => buildDialog.close());
 
-async function watchAction(requestId, code) {
+async function watchAction(requestId, code, requestedAt) {
   const token = ++actionPollToken;
   let firstRequest = true;
   while (token === actionPollToken) {
@@ -302,7 +305,7 @@ async function watchAction(requestId, code) {
     }
     firstRequest = false;
     try {
-      const query = new URLSearchParams({ requestId, code });
+      const query = new URLSearchParams({ requestId, code, requestedAt });
       const response = await fetch(`/__api/actions?${query}`, {
         headers: requestHeaders({ Accept: "application/json" }),
       });
@@ -371,7 +374,7 @@ form.addEventListener("submit", async (event) => {
     startBuildAnimation();
     codeInput.value = "";
     expiryInput.value = "";
-    void watchAction(data.requestId, data.code);
+    void watchAction(data.requestId, data.code, data.requestedAt);
   } catch (error) {
     showError(error.message || t("unknownError"));
   } finally {
