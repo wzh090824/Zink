@@ -317,9 +317,13 @@ buildDialog.addEventListener("close", stopCountdown);
 
 async function watchAction(requestId, code) {
   const token = ++actionPollToken;
+  let firstRequest = true;
   while (token === actionPollToken) {
-    await new Promise((resolve) => window.setTimeout(resolve, 500));
-    if (token !== actionPollToken) return;
+    if (!firstRequest) {
+      await new Promise((resolve) => window.setTimeout(resolve, 500));
+      if (token !== actionPollToken) return;
+    }
+    firstRequest = false;
     try {
       const query = new URLSearchParams({ requestId, code });
       const response = await fetch(`/__api/actions?${query}`, {
