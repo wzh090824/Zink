@@ -39,10 +39,9 @@ GitHub 仓库：[wzh090824/Zink](https://github.com/wzh090824/Zink)
 
 快速概览：
 
-1. 在 GitHub 建立仓库并推送项目。
-2. 创建仅授予目标仓库 `Contents: Read and write`、`Actions: Read-only`、`Metadata: Read-only` 权限的 Fine-grained token。
-3. 在 `wrangler.toml` 设置仓库所有者、仓库名和分支；使用 `wrangler secret put` 保存 `GITHUB_TOKEN` 与管理员访问密码 `ADMIN_KEY`。
-4. 运行 `npx wrangler deploy`。
+1. Fork [Zink 仓库](https://github.com/wzh090824/Zink) 到自己的 GitHub 账号，并在 Fork 的 `wrangler.toml` 中设置自己的 Owner、仓库名和分支。
+2. 为 Fork 创建仅授予 `Contents: Read and write`、`Actions: Read-only`、`Metadata: Read-only` 权限的 Fine-grained token。
+3. 在 Cloudflare 网页仪表盘连接自己的 Fork，或使用 Wrangler 命令行部署；完整步骤见 [部署指南](Deployment.md)。
 
 ## 项目结构与命名
 

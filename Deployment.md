@@ -1,35 +1,36 @@
 # Zink 部署与维护指南
 
-本文从空仓库开始说明 Zink 的 GitHub 和 Cloudflare 配置。项目使用 Cloudflare Workers Static Assets，无需单独构建前端，也不依赖数据库。
+本文以 Fork Zink 项目作为常用部署流程，说明如何配置 GitHub 和 Cloudflare。项目使用 Cloudflare Workers Static Assets，无需单独构建前端，也不依赖数据库。
 
 ## 1. 前置要求
 
 - 一个 GitHub 账号，以及一个可启用 GitHub Actions 的仓库。
 - 一个 Cloudflare 账号。
-- Node.js 20 或更新版本，npm，以及 Git。
+- Node.js 20 或更新版本、npm 和 Git 仅在本地开发或使用 Wrangler 命令行部署时需要；Fork 加 Cloudflare 网页仪表盘部署不要求安装这些工具。
 - 仓库的 GitHub Actions 设置允许运行工作流。
 
-## 2. 创建 GitHub 仓库并推送
+## 2. Fork Zink 到自己的 GitHub 账号
 
-1. 在 GitHub 创建仓库。若使用公开仓库，请先确认第 9 节所述 IP 记录会公开可见。
-2. 首次推送时设置远程地址和分支。将 URL 换成自己的仓库地址：
+部署时需要一个你有写入权限的仓库：Worker 会通过 GitHub Action 把每条短链写进仓库。直接连接上游的 `wzh090824/Zink` 不合适，因为你没有权限向上游仓库写入；Fork 会为你创建一份独立副本。
 
-   ```sh
-   git remote add origin https://github.com/wzh090824/Zink.git
-   git branch -M main
-   git add .gitignore README.md Deployment.md wrangler.toml Src Public Tests .github/workflows/Create-Short-Link.yml
-   git commit -m "Build Zink short link service"
-   git push -u origin main
+1. 打开 [Zink 仓库](https://github.com/wzh090824/Zink)，点击 **Fork → Create a new fork**，选择自己的 GitHub 账号或组织作为 Owner，并创建 Fork。建议保留仓库名 `Zink`；若改了仓库名，后面也要使用新名称。
+2. 打开 Fork 中的 `wrangler.toml`，点击编辑按钮，在 `[vars]` 区域把配置改成自己的仓库信息：
+
+   ```toml
+   GITHUB_OWNER = "你的 GitHub 用户名或组织名"
+   GITHUB_REPO = "Zink"
+   GITHUB_BRANCH = "main"
    ```
 
-   GitHub Actions 工作流目录 `.github/workflows/` 必须保持小写，这是 GitHub 的约定。第一次 Action 成功后，仓库根目录会自动出现 `List/` 和第一条映射文件。
+   `GITHUB_REPO` 必须与 Fork 的实际仓库名一致。保存并提交到 `main`；Cloudflare 后续会从这个 Fork 读取配置和源码。
 
-3. 确认 GitHub 仓库的默认分支为 `main`。若使用其他分支，后续也要同步修改 `wrangler.toml` 的 `GITHUB_BRANCH`。
+3. 在 Fork 的 **Settings → Actions → General** 确认允许 GitHub Actions 运行。GitHub 对 Fork 的工作流可能要求首次手动启用；第一次部署短链后，如 GitHub 提示审核工作流，在仓库 **Actions** 页面批准运行。
+4. 若 Fork 设为公开仓库，请先确认第 9 节所述 IP 记录和目标网址会公开可见。GitHub Actions 工作流目录 `.github/workflows/` 必须保持小写；首次 Action 成功后，仓库根目录会自动出现 `List/` 和第一条映射文件。
 
 ## 3. 创建 GitHub Fine-grained token
 
 1. 在 GitHub 进入 **Settings → Developer settings → Personal access tokens → Fine-grained tokens**。
-2. 创建新 token，Repository access 选择 **Only select repositories**，只选短链仓库。
+2. 创建新 token，Repository access 选择 **Only select repositories**，只选你刚 Fork 的仓库，不要选择上游 `wzh090824/Zink`。
 3. Repository permissions 设置：
    - **Contents: Read and write**：Worker 查询映射、Action 写入文件。
    - **Actions: Read-only**：Worker 读取本次 Action 的实时状态。
@@ -52,7 +53,7 @@ directory = "./Public"
 binding = "ASSETS"
 
 [vars]
-GITHUB_OWNER = "wzh090824"
+GITHUB_OWNER = "你的 GitHub 用户名或组织名"
 GITHUB_REPO = "Zink"
 GITHUB_BRANCH = "main"
 ```
@@ -85,12 +86,12 @@ npx wrangler deploy
 
 ## 5. 通过 Cloudflare 网页仪表盘部署（Workers Builds）
 
-此方式在 Cloudflare 网页仪表盘连接 GitHub 仓库；每次推送到指定分支后，Cloudflare 会读取仓库根目录的 `wrangler.toml` 并部署 Worker 与 `Public/` 静态资源。无需在本机安装 Wrangler。不要把 Zink 建成 Pages 项目：它需要 Worker API 路由和 `ASSETS` 绑定。
+此方式在 Cloudflare 网页仪表盘连接你 Fork 的 GitHub 仓库；每次推送到指定分支后，Cloudflare 会读取仓库根目录的 `wrangler.toml` 并部署 Worker 与 `Public/` 静态资源。无需在本机安装 Wrangler。不要把 Zink 建成 Pages 项目：它需要 Worker API 路由和 `ASSETS` 绑定。
 
-1. 先完成[第 2 节](#2-创建-github-仓库并推送)的仓库推送和[第 3 节](#3-创建-github-fine-grained-token)的 Token 创建。确认 GitHub 仓库 `wzh090824/Zink` 的 `main` 分支存在，且 GitHub Actions 已启用。
-2. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)，进入 **Workers & Pages**，选择 **Create application**，再选择 **Workers** 下的 **Connect to Git** 或 **Set up Git integration**。不同账户的界面文字可能略有差异；选择连接 GitHub，并授权 Cloudflare 访问 `wzh090824/Zink` 仓库。
+1. 先完成[第 2 节](#2-fork-zink-到自己的-github-账号)的 Fork 和配置，再完成[第 3 节](#3-创建-github-fine-grained-token)的 Token 创建。确认自己的 Fork 的 `main` 分支存在，且 GitHub Actions 已启用。
+2. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)，进入 **Workers & Pages**，选择 **Create application**，再选择 **Workers** 下的 **Connect to Git** 或 **Set up Git integration**。不同账户的界面文字可能略有差异；选择连接 GitHub，并授权 Cloudflare 访问你刚 Fork 的仓库。
 3. 在仓库和构建设置中填写：
-   - **Git repository**：`wzh090824/Zink`。
+   - **Git repository**：选择 `你的用户名或组织名/Zink`，不要选择上游仓库。
    - **Production branch**：`main`。
    - **Project / Worker name**：`zink`，与 `wrangler.toml` 的 `name` 相同。
    - **Root directory**：使用默认的仓库根目录（通常显示为 `/`）；不要指向 `Public/` 子目录。
