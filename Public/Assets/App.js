@@ -360,25 +360,6 @@ function restoreAccessMode() {
   openAccessDialog();
 }
 
-async function loadServiceStatus() {
-  const status = document.querySelector("#service-status");
-  const dot = document.querySelector("#state-dot");
-  try {
-    const response = await fetch("/__api/health", {
-      headers: requestHeaders({ Accept: "application/json" }),
-    });
-    if (!response.ok) throw new Error("Worker unavailable");
-    const data = await response.json();
-    status.textContent = data.ready
-      ? t("serviceReady")
-      : t("serviceUnconfigured");
-    dot.className = data.ready ? "state-dot ready" : "state-dot offline";
-  } catch {
-    status.textContent = t("serviceOffline");
-    dot.className = "state-dot offline";
-  }
-}
-
 function showError(message) {
   errorBox.textContent = message;
   errorBox.hidden = false;
@@ -609,5 +590,4 @@ copyButton.addEventListener("click", async () => {
 });
 
 restoreAccessMode();
-loadServiceStatus();
 loadSiteSettings().catch(() => {});

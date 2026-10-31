@@ -17,6 +17,14 @@ const notFoundHtml = await readFile(
   new URL("../Public/404.html", import.meta.url),
   "utf8",
 );
+const appSource = await readFile(
+  new URL("../Public/Assets/App.js", import.meta.url),
+  "utf8",
+);
+const stylesheet = await readFile(
+  new URL("../Public/Assets/Styles.css", import.meta.url),
+  "utf8",
+);
 
 test("Chinese and English translations cover both pages", () => {
   assert.deepEqual(supportedLanguages, ["zh-CN", "en"]);
@@ -73,10 +81,18 @@ test("Chinese and English translations cover both pages", () => {
   }
   assert.equal(translate("en", "pageTitle"), "Zink | Create a short link");
   assert.equal(translate("zh-CN", "pageTitle"), "Zink | 创建短链");
-  assert.equal(translate("zh-CN", "serviceReady"), "Zink");
   assert.match(pageHtml, /<p class="site-label">Zink<\/p>/);
   assert.match(notFoundHtml, /<title>Zink \| 短链不存在<\/title>/);
-  assert.match(pageHtml, /id="service-status"[^>]*data-i18n="serviceChecking"/);
+  assert.match(
+    pageHtml,
+    /class="service-state" aria-label="Zink">\s*<span id="service-status">Zink<\/span>/,
+  );
+  assert.doesNotMatch(
+    `${pageHtml}\n${appSource}\n${translationSource}`,
+    /state-dot|serviceChecking|serviceUnconfigured|serviceOffline|loadServiceStatus|__api\/health/,
+  );
+  assert.match(stylesheet, /\.build-dialog-actions\s*\{[^}]*justify-content:\s*center/s);
+  assert.match(stylesheet, /\.build-link-block\s*\{[^}]*justify-items:\s*center/s);
   assert.match(pageHtml, /href="https:\/\/github\.com\/wzh090824\/Zink"/);
   assert.match(notFoundHtml, /href="https:\/\/github\.com\/wzh090824\/Zink"/);
   assert.match(pageHtml, /<button\b(?=[^>]*\bid="language-toggle")(?=[^>]*\bclass="language-toggle")[^>]*>/);

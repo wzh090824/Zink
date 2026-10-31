@@ -132,18 +132,6 @@ select:focus-visible {
   color: var(--ink);
   background: var(--surface-muted);
 }
-.state-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #d59b37;
-}
-.state-dot.ready {
-  background: #48a875;
-}
-.state-dot.offline {
-  background: #c9514b;
-}
 .page-options {
   display: inline-flex;
   align-items: center;
@@ -663,10 +651,21 @@ select:focus-visible {
   animation: build-backdrop-in 520ms ease both;
 }
 .build-dialog-header {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: center;
   gap: 18px;
+  text-align: center;
+}
+.build-dialog-header > div {
+  padding: 0 36px;
+  text-align: center;
+}
+.build-dialog-header > .icon-button {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 .build-eyebrow {
   margin: 0 0 6px;
@@ -854,9 +853,11 @@ select:focus-visible {
 }
 .build-link-block {
   display: grid;
+  justify-items: center;
   gap: 6px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
+  text-align: center;
 }
 .build-url-label {
   color: var(--muted);
@@ -867,14 +868,16 @@ select:focus-visible {
   font-size: 13px;
   font-weight: 500;
   overflow-wrap: anywhere;
+  text-align: center;
 }
 .build-dialog .uploaded-at {
   margin: 10px 0 0;
+  text-align: center;
 }
 .build-dialog-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 13px;
