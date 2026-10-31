@@ -20,19 +20,15 @@ const buildDialogTitle = document.querySelector("#build-title");
 const buildStatus = document.querySelector("#build-status");
 const buildRing = document.querySelector("#build-ring");
 const ringProgress = document.querySelector("#build-ring-progress");
-const countdownValue = document.querySelector("#countdown-value");
 const buildResultLink = document.querySelector("#build-result-link");
 const uploadedAt = document.querySelector("#uploaded-at");
 const copyButton = document.querySelector("#copy-link");
 const ringCircumference = 2 * Math.PI * 52;
-const countdownSeconds = 60;
 
 let locale = preferredLanguage();
 let accessMode = null;
 let adminKey = "";
 let actionPollToken = 0;
-let countdownTimer = null;
-let countdownRemaining = countdownSeconds;
 
 function preferredLanguage() {
   try {
@@ -256,16 +252,8 @@ function validUrl(value) {
   }
 }
 
-function stopCountdown() {
-  if (countdownTimer) window.clearInterval(countdownTimer);
-  countdownTimer = null;
-}
-
-function startCountdown() {
-  stopCountdown();
-  countdownRemaining = countdownSeconds;
-  countdownValue.textContent = String(countdownRemaining);
-  ringProgress.style.strokeDasharray = String(ringCircumference);
+function startBuildAnimation() {
+  ringProgress.style.strokeDasharray = "90 327";
   ringProgress.style.strokeDashoffset = "0";
   buildDialog.dataset.state = "running";
   buildRing.dataset.state = "running";
@@ -273,18 +261,6 @@ function startCountdown() {
   buildStatus.textContent = t("statusWaiting");
   uploadedAt.hidden = true;
   if (!buildDialog.open) buildDialog.showModal();
-  countdownTimer = window.setInterval(() => {
-    if (countdownRemaining === 0) return;
-    countdownRemaining -= 1;
-    countdownValue.textContent = String(countdownRemaining);
-    ringProgress.style.strokeDashoffset = String(
-      ringCircumference * (1 - countdownRemaining / countdownSeconds),
-    );
-    if (countdownRemaining === 0) {
-      buildStatus.textContent = t("statusLongWait");
-      stopCountdown();
-    }
-  }, 1000);
 }
 
 function setBuildState(state, messageKey) {
@@ -298,7 +274,10 @@ function setBuildState(state, messageKey) {
   const finished = state === "success" || state === "failure";
   buildDialog.dataset.state = finished ? state : "running";
   buildRing.dataset.state = finished ? state : "running";
-  if (state === "success") ringProgress.style.strokeDashoffset = "0";
+  if (finished) {
+    ringProgress.style.strokeDasharray = String(ringCircumference);
+    ringProgress.style.strokeDashoffset = "0";
+  }
   buildDialogTitle.textContent = t(
     state === "success"
       ? "buildSuccessTitle"
@@ -307,13 +286,11 @@ function setBuildState(state, messageKey) {
         : "buildTitle",
   );
   buildStatus.textContent = t(messageKey || messages[state] || "statusRunning");
-  if (finished) stopCountdown();
 }
 
 document
   .querySelector("#close-build")
   .addEventListener("click", () => buildDialog.close());
-buildDialog.addEventListener("close", stopCountdown);
 
 async function watchAction(requestId, code) {
   const token = ++actionPollToken;
@@ -391,7 +368,7 @@ form.addEventListener("submit", async (event) => {
 
     buildResultLink.href = data.shortUrl;
     buildResultLink.textContent = data.shortUrl;
-    startCountdown();
+    startBuildAnimation();
     codeInput.value = "";
     expiryInput.value = "";
     void watchAction(data.requestId, data.code);

@@ -20,9 +20,10 @@ new vm.Script(`(async () => {\n${actionScript}\n})`);
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
 test("GitHub Action writes metadata and refuses filename collisions", async () => {
+  assert.match(workflow, /^name: Create New$/m);
   assert.match(
     workflow,
-    /run-name: Short link \$\{\{ github\.event\.client_payload\.requestId \}\}/,
+    /run-name: Short-\$\{\{ github\.event\.client_payload\.code \}\}/,
   );
 
   const code = "NUL";

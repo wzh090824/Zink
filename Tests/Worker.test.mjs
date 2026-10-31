@@ -58,7 +58,7 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
           ? []
           : [
               {
-                display_title: `Short link ${lastDispatch.requestId}`,
+                display_title: `Short-${lastDispatch.code}`,
                 status: runStatus,
                 conclusion: runStatus === "completed" ? "success" : null,
               },

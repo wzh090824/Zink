@@ -37,7 +37,6 @@ test("Chinese and English translations cover both pages", () => {
     "statusSuccess",
     "statusFailure",
     "statusRetry",
-    "statusLongWait",
   ]) {
     keys.add(key);
   }
@@ -57,4 +56,5 @@ test("Chinese and English translations cover both pages", () => {
 test("build status is displayed without GitHub Action links", () => {
   assert.doesNotMatch(pageHtml, /id="action-link"|id="run-link"/);
   assert.doesNotMatch(pageHtml, /href="https:\/\/github\.com/);
+  assert.doesNotMatch(pageHtml, /countdown-value|countdown-number/);
 });

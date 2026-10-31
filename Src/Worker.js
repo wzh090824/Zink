@@ -332,8 +332,9 @@ async function getActionStatus(request, url, env) {
       502,
     );
   const data = await response.json();
+  const code = url.searchParams.get("code") || "";
   const run = (data.workflow_runs || []).find(
-    (item) => item.display_title === `Short link ${requestId}`,
+    (item) => item.display_title === `Short-${code}`,
   );
   if (!run)
     return jsonResponse({
@@ -380,7 +381,6 @@ async function getActionStatus(request, url, env) {
             `The Action failed (${run.conclusion || "unknown"}).`,
           );
     if (result.state === "success") {
-      const code = url.searchParams.get("code") || "";
       if (validCode(code)) {
         const file = await getGithubFile(code, env);
         if (file.kind === "found" && file.uploadedAt)

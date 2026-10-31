@@ -1,5 +1,5 @@
-name: Create short link
-run-name: Short link ${{ github.event.client_payload.requestId }}
+name: Create New
+run-name: Short-${{ github.event.client_payload.code }}
 
 on:
   repository_dispatch:
