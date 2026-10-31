@@ -11,7 +11,7 @@
 
 ## 2. 创建 GitHub 仓库并推送
 
-1. 在 GitHub 创建仓库。若使用公开仓库，请先确认第 8 节所述 IP 记录会公开可见。
+1. 在 GitHub 创建仓库。若使用公开仓库，请先确认第 9 节所述 IP 记录会公开可见。
 2. 首次推送时设置远程地址和分支。将 URL 换成自己的仓库地址：
 
    ```sh
@@ -81,7 +81,45 @@ npx wrangler deploy
 
 首次部署会输出 `workers.dev` 地址。也可在 Cloudflare Dashboard 的 Worker 域名设置中绑定自己的域名；使用自定义短码时，链接会基于实际访问的域名生成。
 
-## 5. GitHub Actions 配置
+本节介绍 Wrangler 命令行部署。若要在 Cloudflare 网页仪表盘连接 GitHub 并自动部署，按[第 5 节](#5-通过-cloudflare-网页仪表盘部署workers-builds)操作。
+
+## 5. 通过 Cloudflare 网页仪表盘部署（Workers Builds）
+
+此方式在 Cloudflare 网页仪表盘连接 GitHub 仓库；每次推送到指定分支后，Cloudflare 会读取仓库根目录的 `wrangler.toml` 并部署 Worker 与 `Public/` 静态资源。无需在本机安装 Wrangler。不要把 Zink 建成 Pages 项目：它需要 Worker API 路由和 `ASSETS` 绑定。
+
+1. 先完成[第 2 节](#2-创建-github-仓库并推送)的仓库推送和[第 3 节](#3-创建-github-fine-grained-token)的 Token 创建。确认 GitHub 仓库 `wzh090824/Zink` 的 `main` 分支存在，且 GitHub Actions 已启用。
+2. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)，进入 **Workers & Pages**，选择 **Create application**，再选择 **Workers** 下的 **Connect to Git** 或 **Set up Git integration**。不同账户的界面文字可能略有差异；选择连接 GitHub，并授权 Cloudflare 访问 `wzh090824/Zink` 仓库。
+3. 在仓库和构建设置中填写：
+   - **Git repository**：`wzh090824/Zink`。
+   - **Production branch**：`main`。
+   - **Project / Worker name**：`zink`，与 `wrangler.toml` 的 `name` 相同。
+   - **Root directory**：使用默认的仓库根目录（通常显示为 `/`）；不要指向 `Public/` 子目录。
+   - **Build command**：留空。Zink 使用原生 JavaScript 和静态文件，不需要前端构建。
+   - **Deploy command**：使用默认值 `npx wrangler deploy`。确保部署命令在仓库根目录运行，以便读取 `wrangler.toml`。
+
+   不要填写 Pages 的静态输出目录。`wrangler.toml` 已声明 `./Public` 和 `ASSETS` 绑定，Wrangler 会据此上传页面资源。保存设置并启动首次部署。
+
+4. 设置构建路径过滤，避免每次新建短链时都重新部署 Worker。GitHub Action 会把映射文件提交到 `List/`；若监视所有文件，每次创建短链都会触发一次部署。首次创建 Worker 后，在 **Workers & Pages → zink → Settings → Build → Build watch paths** 设置：
+
+   | 字段             | 值               |
+   | ---------------- | ---------------- |
+   | Include paths    | `*`              |
+   | Exclude paths    | `List/*`          |
+
+   这样源码、`Public/` 资源和 `wrangler.toml` 的改动仍会触发部署，而只改动 `List/` 映射文件时会跳过部署。路径过滤规则的详细说明见 [Cloudflare Build watch paths 文档](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/)。
+
+5. 首次部署完成后，在 **Workers & Pages → zink → Settings → Variables and Secrets** 添加运行时 Secrets。选择 **Production** 环境并逐个新增：
+   - `GITHUB_TOKEN`：上一节创建的 Fine-grained token。
+   - `ADMIN_KEY`：管理员访问密码。可设置独立的高强度随机密码；不设置时仍可用访客模式，但不能验证管理员密码。
+
+   `GITHUB_OWNER`、`GITHUB_REPO`、`GITHUB_BRANCH` 已由仓库的 `wrangler.toml` 提供，不需要重复放入构建环境变量。若使用自己的仓库，应先在 `wrangler.toml` 修改这三项并推送。保存 Secrets 后，选择 **Save and deploy** 或 **Deploy changes** 发布新版本；若界面没有自动发布选项，可进入 **Deployments** 对最新提交选择 **Retry deployment**。Secrets 不要加入 GitHub 仓库或 Build command。
+
+6. 在 Worker 的 **Settings → Domains & Routes** 中确认已启用 `workers.dev` 域名。Cloudflare 会显示访问地址，例如 `https://zink.<你的子域>.workers.dev`。如需自定义域名，可在此添加并按提示配置 DNS。
+7. 打开 Worker 地址，确认服务状态为已连接；跳过密码后创建一条测试短链，等待弹窗显示 Action 成功，再检查 GitHub `List/` 中是否出现映射文件。若服务仍提示等待配置，重新检查 Production 环境的 `GITHUB_TOKEN` Secret，以及仓库和分支配置。
+
+后续修改 `Src/`、`Public/` 或 `wrangler.toml` 并推送到 `main` 时，Workers Builds 会自动重新部署。只创建短链时，Action 产生的 `List/` 提交会被路径规则忽略，不会触发部署。Workers Builds 的 Git 集成和构建设置详见 [Cloudflare 官方配置文档](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/)。
+
+## 6. GitHub Actions 配置
 
 文件 [`Create-Short-Link.yml`](.github/workflows/Create-Short-Link.yml) 监听 `repository_dispatch` 事件 `create_short_link`。Worker 发出的 payload 含请求编号、短码、目标网址、可选过期时间、Cloudflare 提供的来源 IP 和目标分支。
 
@@ -89,7 +127,7 @@ npx wrangler deploy
 
 每个 Action 的运行名称包含唯一请求编号。工作台据此查询 GitHub Actions Runs API，每 0.5 秒更新等待、排队、执行、成功或失败状态，直到 Action 结束。
 
-## 6. 首次验证
+## 7. 首次验证
 
 1. 打开 Worker 地址，应显示创建表单和访问模式对话框。
 2. 选择跳过后提交目标网址。工作台应返回随机短码并开始同步 Action 状态。
@@ -99,7 +137,7 @@ npx wrangler deploy
 6. 可通过语言菜单选择简体中文或英语；语言偏好会保存在浏览器，并应用到 404 页面和 Worker API 消息。太阳/月亮按钮切换亮暗主题。
 7. 创建请求受理后会打开构建弹窗，圆环倒计时 60 秒；若 Action 仍在运行，页面会持续同步。成功时数字会动画变为绿色勾号。
 
-## 7. 本地开发
+## 8. 本地开发
 
 创建本地文件 `.dev.vars`（该文件已加入 `.gitignore`）：
 
@@ -119,7 +157,7 @@ npx wrangler dev
 
 打开 Wrangler 输出的本地地址。调用 GitHub 时，本地请求没有 `CF-Connecting-IP`，因此记录中的 IP 可能为空；线上 Cloudflare 请求会填入该头。
 
-## 8. IP 与公开仓库
+## 9. IP 与公开仓库
 
 Action 将创建请求中的来源 IP 写入 `List/{短码}`。线上 IP 取自 Cloudflare 的 `CF-Connecting-IP`，而不是访客可自行设置的普通 `X-Forwarded-For`。Action 同时写入 UTC 格式的 `uploadedAt` 时间。
 
@@ -127,7 +165,7 @@ Action 将创建请求中的来源 IP 写入 `List/{短码}`。线上 IP 取自 
 
 访客模式允许任何人触发 GitHub Action。若公开提供服务，可在 Cloudflare 为创建 API 路由 `/__api/links` 配置速率限制规则，并监控 GitHub Actions 使用量。
 
-## 9. 故障排查
+## 10. 故障排查
 
 | 现象                        | 检查项                                                                                                      |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -138,7 +176,9 @@ Action 将创建请求中的来源 IP 写入 `List/{短码}`。线上 IP 取自 
 | Action 因短码重复失败       | 该短码已经存在；选择另一个短码，不要直接覆盖映射文件。                                                      |
 | 短链显示 404                | 确认 Action 成功，检查 `List/` 文件名和 JSON 的 `url` 字段；如果设了过期时间，确认还未到期。                |
 | 部署后静态资源 404          | 确认 `wrangler.toml` 使用大小写敏感路径 `./Public`，且 HTML 引用 `/Assets/App.js` 和 `/Assets/Styles.css`。 |
+| 创建短链后触发 Worker 部署  | 检查 Workers Builds 的 **Build watch paths** 是否把 `List/*` 加入 **Exclude paths**。                         |
+| 仪表盘部署后显示未配置      | 检查 Secret 是否加在 Worker 的 **Production** 环境，而非只加在 Build environment；保存后重新部署。            |
 
-## 10. 文件命名约定
+## 11. 文件命名约定
 
 项目自有源代码目录和文件使用首字母大写，例如 `Src/Worker.js`、`Public/Assets/App.js`、`Public/Assets/Styles.css`。Cloudflare 的首页 `index.html`、自定义错误页 `404.html`、Wrangler 的默认配置 `wrangler.toml`、GitHub Actions 的 `.github/workflows/` 路径以及 GitHub 识别的 `README.md` 保持各自平台约定的拼写。

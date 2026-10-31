@@ -33,6 +33,8 @@ IP 来自 Cloudflare 的 `CF-Connecting-IP` 请求头；上传时间由 GitHub A
 
 完整部署、首次推送、GitHub 权限、Cloudflare 配置、验证与故障排查步骤见 [Deployment.md](Deployment.md)。
 
+Cloudflare 网页仪表盘连接 GitHub 并自动部署的详细步骤见 [部署指南第 5 节](Deployment.md#5-通过-cloudflare-网页仪表盘部署workers-builds)。
+
 GitHub 仓库：[wzh090824/Zink](https://github.com/wzh090824/Zink)
 
 快速概览：
