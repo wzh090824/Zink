@@ -1,40 +1,45 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap");
-
 :root {
   color-scheme: light;
-  --page: #f5f6f8;
+  --page: #ffffff;
   --surface: #ffffff;
-  --ink: #252a32;
-  --ink-soft: #555e69;
-  --muted: #858d97;
-  --line: #dfe3e8;
-  --blue: #2864e8;
-  --blue-hover: #1e55ce;
-  --green: #388b68;
-  --green-soft: #eaf5ef;
-  --red: #b83f3f;
-  --red-soft: #fff0ef;
-  --shadow: 0 3px 12px rgba(22, 31, 45, 0.09), 0 1px 2px rgba(22, 31, 45, 0.04);
-  font-family: "DM Sans", "Noto Sans SC", sans-serif;
+  --surface-muted: #f4f4f5;
+  --ink: #09090b;
+  --ink-soft: #52525b;
+  --muted: #71717a;
+  --line: #e4e4e7;
+  --primary: #18181b;
+  --primary-hover: #27272a;
+  --primary-foreground: #fafafa;
+  --green: #15803d;
+  --green-soft: #f0fdf4;
+  --red: #b91c1c;
+  --red-soft: #fef2f2;
+  --ring: #a1a1aa;
+  --shadow: 0 1px 2px rgba(9, 9, 11, 0.05);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Noto Sans SC", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #15191f;
-  --surface: #202630;
-  --ink: #edf0f5;
-  --ink-soft: #c3cad4;
-  --muted: #909aa8;
-  --line: #3a4350;
-  --blue: #5584f0;
-  --blue-hover: #6d96f4;
-  --green: #76c69e;
-  --green-soft: #263a30;
-  --red: #f18d87;
-  --red-soft: #402b2b;
-  --shadow: 0 8px 28px rgba(0, 0, 0, 0.24);
+  --page: #09090b;
+  --surface: #09090b;
+  --surface-muted: #18181b;
+  --ink: #fafafa;
+  --ink-soft: #d4d4d8;
+  --muted: #a1a1aa;
+  --line: #27272a;
+  --primary: #fafafa;
+  --primary-hover: #e4e4e7;
+  --primary-foreground: #18181b;
+  --green: #4ade80;
+  --green-soft: #052e16;
+  --red: #f87171;
+  --red-soft: #450a0a;
+  --ring: #71717a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 * {
@@ -69,7 +74,7 @@ a {
 button:focus-visible,
 a:focus-visible,
 input:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--blue) 30%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--ring) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -81,11 +86,12 @@ input:focus-visible {
   margin: 0 auto;
 }
 .page-tools {
-  min-height: 56px;
-  display: flex;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
 }
 .service-state,
 .site-label {
@@ -93,34 +99,38 @@ input:focus-visible {
   align-items: center;
   gap: 7px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .access-controls {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
 }
 .access-badge {
-  padding: 4px 7px;
-  border-radius: 4px;
-  color: var(--blue);
-  background: color-mix(in srgb, var(--blue) 9%, var(--surface));
-  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--ink-soft);
+  background: var(--surface-muted);
+  font-size: 11px;
 }
 .change-mode-button {
-  padding: 4px 0;
-  border: 0;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
   color: var(--ink-soft);
   background: transparent;
-  font-size: 10px;
+  font-size: 12px;
   cursor: pointer;
 }
 .change-mode-button:hover {
-  color: var(--blue);
+  border-color: var(--line);
+  color: var(--ink);
+  background: var(--surface-muted);
 }
 .state-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #d59b37;
 }
@@ -133,56 +143,56 @@ input:focus-visible {
 .theme-switch {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   padding: 3px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 7px;
   background: var(--surface);
 }
 .theme-switch button {
-  min-height: 25px;
-  padding: 0 9px;
+  min-height: 28px;
+  padding: 0 10px;
   border: 0;
-  border-radius: 4px;
+  border-radius: 5px;
   color: var(--muted);
   background: transparent;
-  font-size: 10px;
+  font-size: 11px;
   cursor: pointer;
 }
 .theme-switch button[aria-pressed="true"] {
-  color: var(--ink);
-  background: var(--page);
+  color: var(--primary-foreground);
+  background: var(--primary);
 }
 .main-content {
   flex: 1;
   display: grid;
   place-items: center;
-  padding: 25px 0 38px;
+  padding: 32px 0 42px;
 }
 .form-card {
-  width: min(100%, 464px);
-  padding: 30px 32px 27px;
-  border: 1px solid rgba(30, 43, 61, 0.04);
-  border-radius: 9px;
+  width: min(100%, 448px);
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
 }
 .form-card h1 {
-  margin: 0 0 24px;
+  margin: 0 0 22px;
   color: var(--ink);
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.4;
-  font-weight: 650;
-  text-align: center;
+  font-weight: 600;
+  text-align: left;
 }
 .field-group {
-  margin-bottom: 15px;
+  margin-bottom: 17px;
 }
 .field-group label {
   display: block;
-  margin: 0 0 7px;
+  margin: 0 0 8px;
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 .field-detail {
@@ -192,24 +202,26 @@ input:focus-visible {
 .field-group input,
 .input-with-prefix {
   width: 100%;
-  height: 42px;
+  height: 40px;
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--ink);
   background: var(--surface);
-  font-size: 12px;
+  font-size: 13px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 .field-group input {
   display: block;
-  padding: 0 11px;
+  padding: 0 12px;
 }
 .field-group input::placeholder {
-  color: #969da6;
+  color: var(--muted);
 }
 .field-group input:focus-visible,
 .input-with-prefix:focus-within {
-  border-color: var(--blue);
-  outline: 3px solid color-mix(in srgb, var(--blue) 15%, transparent);
+  border-color: var(--ring);
+  outline: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 18%, transparent);
   outline-offset: 0;
 }
 .input-with-prefix {
@@ -221,12 +233,12 @@ input:focus-visible {
   flex: none;
   padding-left: 11px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .input-with-prefix input {
   min-width: 0;
-  height: 40px;
+  height: 38px;
   padding-left: 4px;
   border: 0;
   outline: 0;
@@ -234,85 +246,82 @@ input:focus-visible {
 .field-hint {
   margin: 6px 0 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.5;
 }
 .guest-code-note {
   margin: -3px 0 16px;
-  padding: 10px 11px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--ink-soft);
-  background: var(--page);
-  font-size: 11px;
+  background: var(--surface-muted);
+  font-size: 12px;
   line-height: 1.5;
 }
 .form-error {
   margin: 2px 0 13px;
-  padding: 9px 10px;
-  border: 1px solid color-mix(in srgb, var(--red) 28%, var(--line));
-  border-radius: 5px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--red) 32%, var(--line));
+  border-radius: 6px;
   color: var(--red);
   background: var(--red-soft);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .submit-button {
   width: 100%;
-  min-height: 45px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 25px;
+  margin-top: 22px;
   border: 0;
-  border-radius: 5px;
-  color: #fff;
-  background: var(--blue);
+  border-radius: 6px;
+  color: var(--primary-foreground);
+  background: var(--primary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition:
-    background-color 130ms ease,
-    transform 130ms ease;
+  transition: background-color 120ms ease, opacity 120ms ease;
 }
 .submit-button:hover {
-  background: var(--blue-hover);
-  transform: translateY(-1px);
+  background: var(--primary-hover);
 }
 .submit-button:disabled {
   cursor: wait;
   opacity: 0.65;
-  transform: none;
 }
 .result-panel {
   margin-top: 16px;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid color-mix(in srgb, var(--green) 24%, var(--line));
-  border-radius: 5px;
+  border-radius: 6px;
   background: var(--green-soft);
   text-align: center;
 }
 .result-message {
   margin: 0 0 8px;
   color: var(--green);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.55;
 }
 .result-link {
   display: block;
   overflow-wrap: anywhere;
-  color: var(--blue);
-  font-size: 12px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 500;
 }
 .copy-button {
-  min-height: 29px;
+  min-height: 32px;
   margin-top: 10px;
-  padding: 0 11px;
+  padding: 0 12px;
   border: 1px solid color-mix(in srgb, var(--green) 28%, var(--line));
-  border-radius: 4px;
+  border-radius: 6px;
   color: var(--green);
   background: var(--surface);
-  font-size: 10px;
+  font-size: 11px;
   cursor: pointer;
 }
 .action-status-row {
@@ -322,7 +331,7 @@ input:focus-visible {
   gap: 7px;
   margin-top: 12px;
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.5;
 }
 .action-status-dot {
@@ -333,7 +342,7 @@ input:focus-visible {
   background: #d59b37;
 }
 .action-status-dot.running {
-  background: var(--blue);
+  background: var(--primary);
   animation: pulse 1.2s ease-in-out infinite alternate;
 }
 .action-status-dot.success {
@@ -345,14 +354,14 @@ input:focus-visible {
 .uploaded-at {
   margin: 7px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
 }
 .run-link {
   display: block;
   width: fit-content;
   margin: 7px auto 0;
-  color: var(--blue);
-  font-size: 10px;
+  color: var(--ink-soft);
+  font-size: 11px;
   text-decoration: none;
 }
 .run-link:hover {
@@ -365,8 +374,8 @@ input:focus-visible {
 }
 .form-note {
   margin: 14px 0 7px;
-  color: var(--green);
-  font-size: 10px;
+  color: var(--muted);
+  font-size: 11px;
   line-height: 1.65;
   text-align: center;
 }
@@ -374,8 +383,8 @@ input:focus-visible {
   display: block;
   width: fit-content;
   margin: 0 auto;
-  color: var(--blue);
-  font-size: 10px;
+  color: var(--ink-soft);
+  font-size: 11px;
   line-height: 1.6;
   text-align: center;
   text-decoration: none;
@@ -384,13 +393,13 @@ input:focus-visible {
   text-decoration: underline;
 }
 .page-footer {
-  min-height: 45px;
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
 }
 .page-footer span + span::before {
   content: "|";
@@ -412,7 +421,7 @@ input:focus-visible {
 }
 .error-code {
   margin: 0 0 6px;
-  color: var(--blue);
+  color: var(--primary);
   font-size: 48px;
   font-weight: 700;
 }
@@ -427,8 +436,8 @@ input:focus-visible {
   line-height: 1.6;
 }
 .back-link {
-  color: var(--blue);
-  font-size: 12px;
+  color: var(--ink);
+  font-size: 13px;
   text-decoration: none;
 }
 .back-link:hover {
@@ -436,13 +445,15 @@ input:focus-visible {
 }
 
 .access-dialog {
-  width: min(calc(100% - 32px), 380px);
-  padding: 27px;
+  width: min(calc(100vw - 32px), 380px);
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  padding: 24px;
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);
   background: var(--surface);
-  box-shadow: 0 22px 60px rgba(18, 25, 37, 0.24);
+  box-shadow: 0 18px 48px rgba(9, 9, 11, 0.2);
 }
 .access-dialog::backdrop {
   background: rgba(20, 26, 35, 0.42);
@@ -450,39 +461,40 @@ input:focus-visible {
 }
 .dialog-eyebrow {
   margin: 0 0 8px;
-  color: var(--blue);
+  color: var(--muted);
   font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.8px;
-  text-align: center;
+  letter-spacing: 0;
+  text-align: left;
 }
 .access-dialog h2 {
   margin: 0 0 8px;
-  font-size: 19px;
-  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: left;
 }
 .dialog-description {
   margin: 0 0 18px;
   color: var(--ink-soft);
   font-size: 11px;
   line-height: 1.7;
-  text-align: center;
+  text-align: left;
 }
 .access-dialog label {
   display: block;
   margin-bottom: 7px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 .access-dialog input {
   width: 100%;
-  height: 41px;
-  padding: 0 10px;
+  height: 40px;
+  padding: 0 12px;
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--ink);
   background: var(--surface);
-  font-size: 12px;
+  font-size: 13px;
 }
 .access-error {
   margin-top: 9px;
@@ -493,20 +505,20 @@ input:focus-visible {
 .admin-access-button,
 .guest-access-button {
   width: 100%;
-  min-height: 39px;
-  border-radius: 5px;
-  font-size: 11px;
+  min-height: 40px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 .admin-access-button {
   margin-top: 15px;
   border: 0;
-  color: #fff;
-  background: var(--blue);
+  color: var(--primary-foreground);
+  background: var(--primary);
 }
 .admin-access-button:hover {
-  background: var(--blue-hover);
+  background: var(--primary-hover);
 }
 .admin-access-button:disabled {
   opacity: 0.65;
@@ -529,46 +541,51 @@ input:focus-visible {
     width: min(100% - 28px, 420px);
   }
   .page-tools {
-    min-height: 50px;
+    min-height: 96px;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "state theme"
+      "access access";
+    gap: 5px 10px;
+    padding: 10px 0;
+  }
+  .service-state {
+    grid-area: state;
   }
   .access-controls {
-    gap: 7px;
+    grid-area: access;
+    justify-self: start;
+  }
+  .theme-switch {
+    grid-area: theme;
+    justify-self: end;
+  }
+  .access-controls {
+    gap: 8px;
   }
   .access-badge {
-    padding: 4px 6px;
-    font-size: 9px;
+    padding: 4px 7px;
+    font-size: 10px;
   }
   .change-mode-button {
-    font-size: 9px;
+    font-size: 11px;
   }
   .main-content {
-    padding: 15px 0 28px;
+    padding: 22px 0 28px;
   }
   .form-card {
-    padding: 25px 21px 23px;
-    border-radius: 8px;
+    padding: 22px 18px;
   }
   .form-card h1 {
-    margin-bottom: 22px;
-    font-size: 20px;
+    margin-bottom: 20px;
   }
   .field-group {
-    margin-bottom: 14px;
-  }
-  .field-group input,
-  .input-with-prefix {
-    height: 43px;
-  }
-  .input-with-prefix input {
-    height: 41px;
-  }
-  .submit-button {
-    min-height: 46px;
+    margin-bottom: 16px;
   }
   .page-footer {
     flex-wrap: wrap;
     gap: 5px 8px;
     padding: 8px 0;
-    font-size: 8px;
+    font-size: 9px;
   }
 }

@@ -20,6 +20,9 @@ let actionPollToken = 0;
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", theme === "dark" ? "#09090b" : "#ffffff");
   document.querySelectorAll("[data-theme-choice]").forEach((button) => {
     button.setAttribute(
       "aria-pressed",
