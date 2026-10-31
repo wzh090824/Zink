@@ -1,20 +1,19 @@
 :root {
   color-scheme: light;
-  --page: #ffffff;
+  --page: #f5f6f8;
   --surface: #ffffff;
-  --surface-muted: #f4f4f5;
-  --ink: #09090b;
-  --ink-soft: #52525b;
-  --muted: #71717a;
-  --line: #e4e4e7;
-  --primary: #18181b;
-  --primary-hover: #27272a;
+  --surface-muted: #f0f1f3;
+  --ink: #17181b;
+  --ink-soft: #42454c;
+  --muted: #60646d;
+  --line: #dfe2e7;
+  --primary: #17181b;
+  --primary-hover: #303238;
   --primary-foreground: #fafafa;
-  --green: #15803d;
-  --red: #b91c1c;
-  --red-soft: #fef2f2;
-  --ring: #a1a1aa;
-  --shadow: 0 1px 2px rgba(9, 9, 11, 0.05);
+  --green: #247b50;
+  --red: #a8242a;
+  --red-soft: #fdf0ef;
+  --ring: #5b616b;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", "Noto Sans SC", sans-serif;
   font-synthesis: none;
@@ -23,21 +22,20 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #09090b;
-  --surface: #09090b;
-  --surface-muted: #18181b;
+  --page: #111214;
+  --surface: #17181b;
+  --surface-muted: #222429;
   --ink: #fafafa;
-  --ink-soft: #d4d4d8;
-  --muted: #a1a1aa;
-  --line: #27272a;
+  --ink-soft: #d0d2d6;
+  --muted: #a4a8b0;
+  --line: #32353b;
   --primary: #fafafa;
-  --primary-hover: #e4e4e7;
-  --primary-foreground: #18181b;
-  --green: #4ade80;
-  --red: #f87171;
-  --red-soft: #450a0a;
-  --ring: #71717a;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --primary-hover: #e2e4e8;
+  --primary-foreground: #17181b;
+  --green: #63c28a;
+  --red: #ff8b8b;
+  --red-soft: #3b2022;
+  --ring: #aeb3bd;
 }
 
 * {
@@ -54,7 +52,7 @@ html {
 }
 body {
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100svh;
   margin: 0;
   color: var(--ink);
   background: var(--page);
@@ -80,14 +78,14 @@ select:focus-visible {
 }
 
 .page-shell {
-  width: min(100% - 40px, 820px);
-  min-height: 100vh;
+  width: min(100% - 48px, 1180px);
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   margin: 0 auto;
 }
 .page-tools {
-  min-height: 64px;
+  min-height: 68px;
   display: grid;
   grid-template-columns: 1fr auto auto;
   align-items: center;
@@ -102,8 +100,10 @@ select:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--ink);
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: 0;
 }
 .access-controls {
   display: inline-flex;
@@ -111,16 +111,16 @@ select:focus-visible {
   gap: 9px;
 }
 .access-badge {
-  padding: 4px 8px;
+  padding: 5px 9px;
   border-radius: 6px;
   color: var(--ink-soft);
   background: var(--surface-muted);
   font-size: 11px;
 }
 .change-mode-button {
-  min-height: 32px;
-  padding: 0 8px;
-  border: 1px solid transparent;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--ink-soft);
   background: transparent;
@@ -140,8 +140,8 @@ select:focus-visible {
 }
 .language-toggle,
 .theme-toggle {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -152,8 +152,8 @@ select:focus-visible {
   cursor: pointer;
 }
 .github-link {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: grid;
   flex: none;
   place-items: center;
@@ -227,22 +227,31 @@ select:focus-visible {
 }
 .main-content {
   flex: 1;
-  display: grid;
-  place-items: center;
-  padding: 32px 0 42px;
+  padding: 52px 0 64px;
 }
 .form-card {
-  width: min(100%, 448px);
-  padding: 26px;
+  width: min(100%, 920px);
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.creator-heading {
+  margin: 0 0 24px;
+}
+.form-card form {
+  padding: 30px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 8px rgba(20, 24, 31, 0.035);
 }
 .form-card h1 {
-  margin: 0 0 22px;
+  margin: 0;
   color: var(--ink);
-  font-size: 20px;
+  font-size: 25px;
   line-height: 1.4;
   font-weight: 600;
   text-align: left;
@@ -256,6 +265,48 @@ select:focus-visible {
   color: var(--ink);
   font-size: 13px;
   font-weight: 500;
+}
+.target-field {
+  margin-bottom: 25px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid var(--line);
+}
+.target-input-wrap {
+  position: relative;
+}
+.target-input-icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.form-card .target-field input {
+  height: 54px;
+  padding: 0 16px 0 48px;
+  font-size: 15px;
+}
+.form-options-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.form-options-grid > .field-group {
+  min-width: 0;
+  margin-bottom: 18px;
+}
+.form-options-grid > .guest-code-note {
+  min-width: 0;
+  align-self: start;
+  margin: 24px 0 18px;
 }
 .field-detail {
   color: var(--ink-soft);
@@ -275,7 +326,7 @@ select:focus-visible {
 }
 .expiry-preset {
   width: 100%;
-  height: 40px;
+  height: 46px;
   padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -284,11 +335,17 @@ select:focus-visible {
   font-size: 13px;
   cursor: pointer;
 }
+.expiry-controls {
+  display: grid;
+  grid-template-columns: minmax(145px, 0.82fr) minmax(0, 1.18fr);
+  gap: 10px;
+  align-items: start;
+}
 .expiry-date-fields {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr;
-  gap: 10px;
-  margin-top: 10px;
+  grid-template-columns: 1.2fr 0.9fr 0.9fr;
+  gap: 8px;
+  margin-top: 0;
 }
 .date-part {
   min-width: 0;
@@ -301,6 +358,10 @@ select:focus-visible {
 .date-part input {
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+.expiry-date-fields input {
+  height: 46px;
+  padding: 0 6px;
 }
 .field-group input,
 .input-with-prefix {
@@ -354,11 +415,13 @@ select:focus-visible {
 }
 .guest-code-note {
   margin: -3px 0 16px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 0;
+  border-left: 2px solid var(--line);
+  padding-left: 14px;
   color: var(--ink-soft);
-  background: var(--surface-muted);
+  background: transparent;
   font-size: 12px;
   line-height: 1.5;
 }
@@ -373,12 +436,14 @@ select:focus-visible {
   line-height: 1.5;
 }
 .submit-button {
-  width: 100%;
-  min-height: 40px;
+  width: auto;
+  min-width: 176px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 22px;
+  margin-top: 0;
+  padding: 0 20px;
   border: 0;
   border-radius: 6px;
   color: var(--primary-foreground);
@@ -456,11 +521,22 @@ select:focus-visible {
   font-size: 10px;
 }
 .form-note {
-  margin: 14px 0 7px;
+  margin: 0;
   color: var(--muted);
   font-size: 11px;
   line-height: 1.65;
-  text-align: center;
+  text-align: left;
+}
+.creator-submit-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 8px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+.creator-submit-row .form-note {
+  max-width: 480px;
 }
 .page-footer {
   min-height: 52px;
@@ -968,6 +1044,28 @@ body,
     box-shadow 820ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+@media (max-width: 760px) {
+  .main-content {
+    padding: 38px 0 48px;
+  }
+  .form-card {
+    width: min(100%, 620px);
+  }
+  .form-card form {
+    padding: 24px;
+  }
+  .form-options-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .form-options-grid > .guest-code-note {
+    margin: 0 0 18px;
+  }
+  .expiry-controls {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  }
+}
+
 @media (max-width: 520px) {
   .page-shell,
   .error-shell {
@@ -1004,16 +1102,53 @@ body,
     font-size: 11px;
   }
   .main-content {
-    padding: 22px 0 28px;
+    padding: 30px 0 36px;
   }
-  .form-card {
-    padding: 22px 18px;
+  .creator-heading {
+    margin-bottom: 18px;
   }
   .form-card h1 {
+    font-size: 22px;
+  }
+  .form-card form {
+    padding: 20px 16px;
+  }
+  .target-field {
     margin-bottom: 20px;
+    padding-bottom: 20px;
+  }
+  .form-card .target-field input {
+    height: 50px;
+    padding-left: 44px;
+    font-size: 13px;
+  }
+  .target-input-icon {
+    left: 13px;
+    width: 18px;
+    height: 18px;
+  }
+  .expiry-controls {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+  .expiry-date-fields {
+    gap: 8px;
   }
   .field-group {
     margin-bottom: 16px;
+  }
+  .creator-submit-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-top: 2px;
+    padding-top: 18px;
+  }
+  .creator-submit-row .submit-button {
+    width: 100%;
+  }
+  .creator-submit-row .form-note {
+    text-align: center;
   }
   .build-dialog {
     padding: 20px;

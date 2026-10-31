@@ -85,12 +85,19 @@ test("Chinese and English translations cover both pages", () => {
   }
   assert.equal(translate("en", "pageTitle"), "Zink | Create a short link");
   assert.equal(translate("zh-CN", "pageTitle"), "Zink | 创建短链");
-  assert.match(pageHtml, /<p class="site-label">Zink<\/p>/);
+  assert.match(
+    pageHtml,
+    /class="service-state" aria-label="Zink">\s*<span id="service-status">Zink<\/span>/,
+  );
   assert.match(notFoundHtml, /<title>Zink \| 短链不存在<\/title>/);
   assert.match(
     pageHtml,
     /class="service-state" aria-label="Zink">\s*<span id="service-status">Zink<\/span>/,
   );
+  assert.match(stylesheet, /\.form-card\s*\{[^}]*width:\s*min\(100%,\s*920px\)/s);
+  assert.match(pageHtml, /class="form-options-grid"/);
+  assert.match(stylesheet, /\.form-options-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\)/s);
+  assert.match(stylesheet, /@media\s*\(max-width:\s*760px\)[\s\S]*?\.form-options-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
   assert.doesNotMatch(
     `${pageHtml}\n${appSource}\n${translationSource}`,
     /state-dot|serviceChecking|serviceUnconfigured|serviceOffline|loadServiceStatus|__api\/health/,

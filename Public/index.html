@@ -66,86 +66,100 @@
 
       <main class="main-content">
         <section class="form-card" aria-labelledby="page-title">
-          <p class="site-label">Zink</p>
-          <h1 id="page-title" data-i18n="createLink">创建短链</h1>
+          <div class="creator-heading">
+            <h1 id="page-title" data-i18n="createLink">创建短链</h1>
+          </div>
           <form id="create-form" novalidate>
-            <div class="field-group" id="custom-code-field">
-              <label for="short-code" data-i18n="customCode">自定义短码</label>
-              <div class="input-with-prefix">
-                <span class="domain-prefix" id="origin-prefix">your-domain/</span>
+            <div class="field-group target-field">
+              <label for="target-url" data-i18n="targetUrl">目标 URL</label>
+              <div class="target-input-wrap">
+                <svg class="target-input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M10 13a5 5 0 0 0 7.07 0l3-3A5 5 0 0 0 13 2.93l-1.72 1.71"></path>
+                  <path d="M14 11a5 5 0 0 0-7.07 0l-3 3A5 5 0 0 0 11 21.07l1.71-1.72"></path>
+                </svg>
                 <input
-                  id="short-code"
-                  name="code"
-                  type="text"
-                  placeholder="例如：我的链接 / my-link"
-                  data-i18n-placeholder="codePlaceholder"
-                  autocomplete="off"
-                  aria-describedby="code-hint"
+                  id="target-url"
+                  name="url"
+                  type="url"
+                  placeholder="https://example.com"
+                  data-i18n-placeholder="targetPlaceholder"
+                  autocomplete="url"
+                  required
                 />
               </div>
-              <p class="field-hint" id="code-hint" data-i18n="codeHint">
-                管理员可自定义任意字符和中文，最多 64 个字符；访客使用随机短码。
-              </p>
             </div>
 
-            <div class="guest-code-note" id="guest-code-note" data-i18n="guestCodeNote" hidden>
-              访客模式：短码由系统随机生成，无法自定义。
-            </div>
-
-            <div class="field-group">
-              <label for="target-url" data-i18n="targetUrl">目标 URL</label>
-              <input
-                id="target-url"
-                name="url"
-                type="url"
-                placeholder="https://example.com"
-                data-i18n-placeholder="targetPlaceholder"
-                autocomplete="url"
-                required
-              />
-            </div>
-
-            <div class="field-group expiry-group">
-              <div class="expiry-heading">
-                <span class="field-label" data-i18n="expiry">失效日期</span>
-                <span class="field-detail" data-i18n="beijingOptional">（北京时间，可选）</span>
+            <div class="form-options-grid">
+              <div class="field-group code-field" id="custom-code-field">
+                <label for="short-code" data-i18n="customCode">自定义短码</label>
+                <div class="input-with-prefix">
+                  <span class="domain-prefix" id="origin-prefix">your-domain/</span>
+                  <input
+                    id="short-code"
+                    name="code"
+                    type="text"
+                    placeholder="例如：我的链接 / my-link"
+                    data-i18n-placeholder="codePlaceholder"
+                    autocomplete="off"
+                    aria-describedby="code-hint"
+                  />
+                </div>
+                <p class="field-hint" id="code-hint" data-i18n="codeHint">
+                  管理员可自定义任意字符和中文，最多 64 个字符；访客使用随机短码。
+                </p>
               </div>
-              <label class="sr-only" for="expiry-preset" data-i18n="expiryPresetLabel">快捷设置有效期</label>
-              <select class="expiry-preset" id="expiry-preset" aria-label="快捷设置有效期" data-i18n-aria-label="expiryPresetLabel">
-                <option value="" data-i18n="expiryNever">永不过期</option>
-                <option value="1" data-i18n="oneDay">1 天</option>
-                <option value="3" data-i18n="threeDays">3 天</option>
-                <option value="7" data-i18n="sevenDays">7 天</option>
-                <option value="30" data-i18n="thirtyDays">30 天</option>
-                <option value="90" data-i18n="ninetyDays">90 天</option>
-                <option value="custom" data-i18n="customDate">自定义日期</option>
-              </select>
-              <div class="expiry-date-fields" role="group" aria-label="失效日期" data-i18n-aria-label="expiry">
-                <div class="date-part">
-                  <label for="expiry-year" data-i18n="year">年</label>
-                  <input id="expiry-year" name="expiryYear" type="text" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="YYYY" />
-                </div>
-                <div class="date-part">
-                  <label for="expiry-month" data-i18n="month">月</label>
-                  <input id="expiry-month" name="expiryMonth" type="text" inputmode="numeric" autocomplete="off" maxlength="2" placeholder="MM" />
-                </div>
-                <div class="date-part">
-                  <label for="expiry-day" data-i18n="day">日</label>
-                  <input id="expiry-day" name="expiryDay" type="text" inputmode="numeric" autocomplete="off" maxlength="2" placeholder="DD" />
-                </div>
+
+              <div class="guest-code-note" id="guest-code-note" data-i18n="guestCodeNote" hidden>
+                访客模式：短码由系统随机生成，无法自定义。
               </div>
-              <p class="field-hint" data-i18n="expiryHint">所选日期的北京时间 23:59:59 结束时失效；留空则永不过期。</p>
+
+              <div class="field-group expiry-group">
+                <div class="expiry-heading">
+                  <span class="field-label" data-i18n="expiry">失效日期</span>
+                  <span class="field-detail" data-i18n="beijingOptional">（北京时间，可选）</span>
+                </div>
+                <label class="sr-only" for="expiry-preset" data-i18n="expiryPresetLabel">快捷设置有效期</label>
+                <div class="expiry-controls">
+                  <select class="expiry-preset" id="expiry-preset" aria-label="快捷设置有效期" data-i18n-aria-label="expiryPresetLabel">
+                    <option value="" data-i18n="expiryNever">永不过期</option>
+                    <option value="1" data-i18n="oneDay">1 天</option>
+                    <option value="3" data-i18n="threeDays">3 天</option>
+                    <option value="7" data-i18n="sevenDays">7 天</option>
+                    <option value="30" data-i18n="thirtyDays">30 天</option>
+                    <option value="90" data-i18n="ninetyDays">90 天</option>
+                    <option value="custom" data-i18n="customDate">自定义日期</option>
+                  </select>
+                  <div class="expiry-date-fields" role="group" aria-label="失效日期" data-i18n-aria-label="expiry">
+                    <div class="date-part">
+                      <label for="expiry-year" data-i18n="year">年</label>
+                      <input id="expiry-year" name="expiryYear" type="text" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="YYYY" />
+                    </div>
+                    <div class="date-part">
+                      <label for="expiry-month" data-i18n="month">月</label>
+                      <input id="expiry-month" name="expiryMonth" type="text" inputmode="numeric" autocomplete="off" maxlength="2" placeholder="MM" />
+                    </div>
+                    <div class="date-part">
+                      <label for="expiry-day" data-i18n="day">日</label>
+                      <input id="expiry-day" name="expiryDay" type="text" inputmode="numeric" autocomplete="off" maxlength="2" placeholder="DD" />
+                    </div>
+                  </div>
+                </div>
+                <p class="field-hint expiry-hint" data-i18n="expiryHint">
+                  所选日期的北京时间 23:59:59 结束时失效；留空则永不过期。
+                </p>
+              </div>
             </div>
 
             <div class="form-error" id="form-error" role="alert" hidden></div>
-            <button class="submit-button" id="submit-button" type="submit" data-i18n="createLink">
-              创建短链
-            </button>
+            <div class="creator-submit-row">
+              <button class="submit-button" id="submit-button" type="submit" data-i18n="createLink">
+                创建短链
+              </button>
+              <p class="form-note" id="form-note" data-i18n="formNote">
+                创建请求将由 GitHub Action 写入仓库，通常几秒后即可访问。
+              </p>
+            </div>
           </form>
-
-          <p class="form-note" id="form-note" data-i18n="formNote">
-            创建请求将由 GitHub Action 写入仓库，通常几秒后即可访问。
-          </p>
         </section>
       </main>
 
