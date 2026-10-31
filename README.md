@@ -33,15 +33,15 @@ IP 来自 Cloudflare 的 `CF-Connecting-IP` 请求头；上传时间由 GitHub A
 
 完整部署、首次推送、GitHub 权限、Cloudflare 配置、验证与故障排查步骤见 [Deployment.md](Deployment.md)。
 
-Cloudflare 网页仪表盘连接 GitHub 并自动部署的详细步骤见 [部署指南第 5 节](Deployment.md#5-通过-cloudflare-网页仪表盘部署workers-builds)。
+Cloudflare 网页仪表盘部署步骤见 [部署指南第 4 节](Deployment.md#4-cloudflare-网页部署)。
 
 GitHub 仓库：[wzh090824/Zink](https://github.com/wzh090824/Zink)
 
 快速概览：
 
-1. Fork [Zink 仓库](https://github.com/wzh090824/Zink) 到自己的 GitHub 账号，并在 Fork 的 `wrangler.toml` 中设置自己的 Owner、仓库名和分支。
+1. Fork [Zink 仓库](https://github.com/wzh090824/Zink) 到自己的 GitHub 账号。
 2. 为 Fork 创建仅授予 `Contents: Read and write`、`Actions: Read-only`、`Metadata: Read-only` 权限的 Fine-grained token。
-3. 在 Cloudflare 网页仪表盘连接自己的 Fork，或使用 Wrangler 命令行部署；完整步骤见 [部署指南](Deployment.md)。
+3. 在 Cloudflare 网页仪表盘连接自己的 Fork，设置仓库变量和 Token；完整步骤见 [部署指南](Deployment.md)。
 
 ## 项目结构与命名
 

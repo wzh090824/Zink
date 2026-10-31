@@ -9,28 +9,16 @@
 - Node.js 20 或更新版本、npm 和 Git 仅在本地开发或使用 Wrangler 命令行部署时需要；Fork 加 Cloudflare 网页仪表盘部署不要求安装这些工具。
 - 仓库的 GitHub Actions 设置允许运行工作流。
 
-## 2. Fork Zink 到自己的 GitHub 账号
+## 2. Fork Zink
 
-部署时需要一个你有写入权限的仓库：Worker 会通过 GitHub Action 把每条短链写进仓库。直接连接上游的 `wzh090824/Zink` 不合适，因为你没有权限向上游仓库写入；Fork 会为你创建一份独立副本。
+打开 [Zink 仓库](https://github.com/wzh090824/Zink)，点击 **Fork → Create a new fork**，将仓库 Fork 到自己的 GitHub 账号。保留默认仓库名 `Zink` 和分支 `main` 即可。Worker 会把短链写进你的 Fork，因此后续 Cloudflare 设置要指向这个 Fork，而不是上游仓库。若 Fork 是公开的，请先确认第 9 节所述 IP 记录和目标网址会公开可见。
 
-1. 打开 [Zink 仓库](https://github.com/wzh090824/Zink)，点击 **Fork → Create a new fork**，选择自己的 GitHub 账号或组织作为 Owner，并创建 Fork。建议保留仓库名 `Zink`；若改了仓库名，后面也要使用新名称。
-2. 打开 Fork 中的 `wrangler.toml`，点击编辑按钮，在 `[vars]` 区域把配置改成自己的仓库信息：
-
-   ```toml
-   GITHUB_OWNER = "你的 GitHub 用户名或组织名"
-   GITHUB_REPO = "Zink"
-   GITHUB_BRANCH = "main"
-   ```
-
-   `GITHUB_REPO` 必须与 Fork 的实际仓库名一致。保存并提交到 `main`；Cloudflare 后续会从这个 Fork 读取配置和源码。
-
-3. 在 Fork 的 **Settings → Actions → General** 确认允许 GitHub Actions 运行。GitHub 对 Fork 的工作流可能要求首次手动启用；第一次部署短链后，如 GitHub 提示审核工作流，在仓库 **Actions** 页面批准运行。
-4. 若 Fork 设为公开仓库，请先确认第 9 节所述 IP 记录和目标网址会公开可见。GitHub Actions 工作流目录 `.github/workflows/` 必须保持小写；首次 Action 成功后，仓库根目录会自动出现 `List/` 和第一条映射文件。
+GitHub 通常会暂停 Fork 中的 Actions。若仓库 **Actions** 页面显示工作流未启用，点击启用即可；第一次运行时若 GitHub 要求审核工作流，也在该页面批准。
 
 ## 3. 创建 GitHub Fine-grained token
 
 1. 在 GitHub 进入 **Settings → Developer settings → Personal access tokens → Fine-grained tokens**。
-2. 创建新 token，Repository access 选择 **Only select repositories**，只选你刚 Fork 的仓库，不要选择上游 `wzh090824/Zink`。
+2. 创建新 token，Repository access 选择 **Only select repositories**，只选你刚 Fork 的 `Zink` 仓库，不要选择上游 `wzh090824/Zink`。
 3. Repository permissions 设置：
    - **Contents: Read and write**：Worker 查询映射、Action 写入文件。
    - **Actions: Read-only**：Worker 读取本次 Action 的实时状态。
@@ -39,86 +27,39 @@
 
 Fine-grained token 的有效期应按自己的凭据轮换策略设置。Token 到期后，短链查询、创建和 Action 状态读取都会受到影响。
 
-## 4. 配置 Cloudflare Worker
+## 4. Cloudflare 网页部署
 
-在项目根目录编辑 `wrangler.toml`：
+1. 完成 Fork 和 Token 创建后，打开 [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages → Create application → Workers → Connect to Git**，授权 Cloudflare 并选择自己的 `Zink` Fork 和 `main` 分支。
+2. 构建设置使用仓库根目录；**Build command** 留空，**Deploy command** 用默认的 `npx wrangler deploy`。不要选 Pages。点击部署，Cloudflare 会按仓库的 `wrangler.toml` 发布 Worker 和 `Public/` 页面。
+3. 在 Worker 的 **Settings → Variables and Secrets** 添加以下 **Production** 配置，然后点击 **Save and deploy**：
 
-```toml
-name = "zink"
-main = "Src/Worker.js"
-compatibility_date = "2026-10-30"
+   | 类型     | 名称            | 值                         |
+   | -------- | --------------- | -------------------------- |
+   | Variable | `GITHUB_OWNER`  | 你的 GitHub 用户名         |
+   | Variable | `GITHUB_REPO`   | `Zink`                     |
+   | Variable | `GITHUB_BRANCH` | `main`                     |
+   | Secret   | `GITHUB_TOKEN`  | 上一节创建的 Fine-grained token |
+   | Secret   | `ADMIN_KEY`     | 管理员访问密码（可选）     |
 
-[assets]
-directory = "./Public"
-binding = "ASSETS"
+   `GITHUB_OWNER` 是 Worker 定位你 Fork 所必需的设置，只需在仪表盘填一次，无需改源码。`wrangler.toml` 的 `keep_vars = true` 会保留这些变量。
+4. 在 **Settings → Build → Build watch paths** 将 **Include paths** 设为 `*`、**Exclude paths** 设为 `List/*`，避免每次创建短链时都重新部署。然后在 **Settings → Domains & Routes** 启用 `workers.dev` 或添加自己的域名。
+5. 打开 Worker 地址，确认服务已连接并创建一条测试短链。后续推送源码到 `main` 会自动重新部署；Action 只更新 `List/` 时会被路径过滤忽略。
 
-[vars]
-GITHUB_OWNER = "你的 GitHub 用户名或组织名"
-GITHUB_REPO = "Zink"
-GITHUB_BRANCH = "main"
-```
+完整配置说明见 [Workers Builds 文档](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/) 和 [Build watch paths 文档](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/)。
 
-安装 Wrangler 并登录：
+## 5. Wrangler 命令行部署（可选）
+
+网页部署不需要本机工具。若要在本地使用 Wrangler，安装并登录后部署：
 
 ```sh
 npm install --save-dev wrangler
 npx wrangler login
-```
-
-将 GitHub token 和管理员访问密码保存为 Cloudflare Worker Secrets：
-
-```sh
 npx wrangler secret put GITHUB_TOKEN
 npx wrangler secret put ADMIN_KEY
-```
-
-每条命令都会提示输入 Secret。`ADMIN_KEY` 应使用独立的高强度随机密码；访客可以跳过管理员密码，但必须通过密码验证才能创建自定义短码。不要将真实密码加入仓库。
-
-部署：
-
-```sh
 npx wrangler deploy
 ```
 
-首次部署会输出 `workers.dev` 地址。也可在 Cloudflare Dashboard 的 Worker 域名设置中绑定自己的域名；使用自定义短码时，链接会基于实际访问的域名生成。
-
-本节介绍 Wrangler 命令行部署。若要在 Cloudflare 网页仪表盘连接 GitHub 并自动部署，按[第 5 节](#5-通过-cloudflare-网页仪表盘部署workers-builds)操作。
-
-## 5. 通过 Cloudflare 网页仪表盘部署（Workers Builds）
-
-此方式在 Cloudflare 网页仪表盘连接你 Fork 的 GitHub 仓库；每次推送到指定分支后，Cloudflare 会读取仓库根目录的 `wrangler.toml` 并部署 Worker 与 `Public/` 静态资源。无需在本机安装 Wrangler。不要把 Zink 建成 Pages 项目：它需要 Worker API 路由和 `ASSETS` 绑定。
-
-1. 先完成[第 2 节](#2-fork-zink-到自己的-github-账号)的 Fork 和配置，再完成[第 3 节](#3-创建-github-fine-grained-token)的 Token 创建。确认自己的 Fork 的 `main` 分支存在，且 GitHub Actions 已启用。
-2. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)，进入 **Workers & Pages**，选择 **Create application**，再选择 **Workers** 下的 **Connect to Git** 或 **Set up Git integration**。不同账户的界面文字可能略有差异；选择连接 GitHub，并授权 Cloudflare 访问你刚 Fork 的仓库。
-3. 在仓库和构建设置中填写：
-   - **Git repository**：选择 `你的用户名或组织名/Zink`，不要选择上游仓库。
-   - **Production branch**：`main`。
-   - **Project / Worker name**：`zink`，与 `wrangler.toml` 的 `name` 相同。
-   - **Root directory**：使用默认的仓库根目录（通常显示为 `/`）；不要指向 `Public/` 子目录。
-   - **Build command**：留空。Zink 使用原生 JavaScript 和静态文件，不需要前端构建。
-   - **Deploy command**：使用默认值 `npx wrangler deploy`。确保部署命令在仓库根目录运行，以便读取 `wrangler.toml`。
-
-   不要填写 Pages 的静态输出目录。`wrangler.toml` 已声明 `./Public` 和 `ASSETS` 绑定，Wrangler 会据此上传页面资源。保存设置并启动首次部署。
-
-4. 设置构建路径过滤，避免每次新建短链时都重新部署 Worker。GitHub Action 会把映射文件提交到 `List/`；若监视所有文件，每次创建短链都会触发一次部署。首次创建 Worker 后，在 **Workers & Pages → zink → Settings → Build → Build watch paths** 设置：
-
-   | 字段             | 值               |
-   | ---------------- | ---------------- |
-   | Include paths    | `*`              |
-   | Exclude paths    | `List/*`          |
-
-   这样源码、`Public/` 资源和 `wrangler.toml` 的改动仍会触发部署，而只改动 `List/` 映射文件时会跳过部署。路径过滤规则的详细说明见 [Cloudflare Build watch paths 文档](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/)。
-
-5. 首次部署完成后，在 **Workers & Pages → zink → Settings → Variables and Secrets** 添加运行时 Secrets。选择 **Production** 环境并逐个新增：
-   - `GITHUB_TOKEN`：上一节创建的 Fine-grained token。
-   - `ADMIN_KEY`：管理员访问密码。可设置独立的高强度随机密码；不设置时仍可用访客模式，但不能验证管理员密码。
-
-   `GITHUB_OWNER`、`GITHUB_REPO`、`GITHUB_BRANCH` 已由仓库的 `wrangler.toml` 提供，不需要重复放入构建环境变量。若使用自己的仓库，应先在 `wrangler.toml` 修改这三项并推送。保存 Secrets 后，选择 **Save and deploy** 或 **Deploy changes** 发布新版本；若界面没有自动发布选项，可进入 **Deployments** 对最新提交选择 **Retry deployment**。Secrets 不要加入 GitHub 仓库或 Build command。
-
-6. 在 Worker 的 **Settings → Domains & Routes** 中确认已启用 `workers.dev` 域名。Cloudflare 会显示访问地址，例如 `https://zink.<你的子域>.workers.dev`。如需自定义域名，可在此添加并按提示配置 DNS。
-7. 打开 Worker 地址，确认服务状态为已连接；跳过密码后创建一条测试短链，等待弹窗显示 Action 成功，再检查 GitHub `List/` 中是否出现映射文件。若服务仍提示等待配置，重新检查 Production 环境的 `GITHUB_TOKEN` Secret，以及仓库和分支配置。
-
-后续修改 `Src/`、`Public/` 或 `wrangler.toml` 并推送到 `main` 时，Workers Builds 会自动重新部署。只创建短链时，Action 产生的 `List/` 提交会被路径规则忽略，不会触发部署。Workers Builds 的 Git 集成和构建设置详见 [Cloudflare 官方配置文档](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/)。
+`GITHUB_OWNER`、`GITHUB_REPO` 和 `GITHUB_BRANCH` 仍在 Cloudflare 的 **Settings → Variables and Secrets** 设置，`keep_vars = true` 会在 Wrangler 发布时保留它们。`ADMIN_KEY` 可选；不设置时访客模式仍可创建随机短码。真实密码不要提交到仓库。
 
 ## 6. GitHub Actions 配置
 
