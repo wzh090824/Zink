@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f6f8" />
+    <title>短链不存在</title>
+    <link rel="stylesheet" href="/Assets/Styles.css" />
+    <script>
+      (() => {
+        try {
+          const theme = localStorage.getItem("shortlink-theme");
+          if (theme === "light" || theme === "dark")
+            document.documentElement.dataset.theme = theme;
+          else if (matchMedia("(prefers-color-scheme: dark)").matches)
+            document.documentElement.dataset.theme = "dark";
+        } catch {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="page-shell error-shell">
+      <header class="page-tools">
+        <span class="site-label">短链服务</span>
+        <div class="theme-switch" role="group" aria-label="主题">
+          <button type="button" data-theme-choice="light" aria-pressed="false">
+            浅色
+          </button>
+          <button type="button" data-theme-choice="dark" aria-pressed="false">
+            深色
+          </button>
+        </div>
+      </header>
+      <main class="not-found-main">
+        <p class="error-code">404</p>
+        <h1>短链暂不可用</h1>
+        <p>短码不存在，或链接已经失效。</p>
+        <a class="back-link" href="/">返回创建页面</a>
+      </main>
+      <footer class="page-footer">
+        <span>无数据库 · Cloudflare + GitHub</span>
+      </footer>
+    </div>
+    <script>
+      document.querySelectorAll("[data-theme-choice]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const theme = button.dataset.themeChoice;
+          document.documentElement.dataset.theme = theme;
+          try {
+            localStorage.setItem("shortlink-theme", theme);
+          } catch {}
+          document
+            .querySelectorAll("[data-theme-choice]")
+            .forEach((item) =>
+              item.setAttribute("aria-pressed", String(item === button)),
+            );
+        });
+      });
+      const current = document.documentElement.dataset.theme || "light";
+      document
+        .querySelector(`[data-theme-choice="${current}"]`)
+        ?.setAttribute("aria-pressed", "true");
+    </script>
+  </body>
+</html>
