@@ -445,6 +445,10 @@ select:focus-visible {
   margin-right: 9px;
   color: var(--line);
 }
+.page-footer .site-registration {
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
 
 .error-shell {
   width: min(100% - 40px, 820px);
@@ -541,6 +545,20 @@ select:focus-visible {
   color: var(--ink);
   background: var(--surface);
   font-size: 13px;
+}
+.settings-dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 16px;
+}
+.settings-dialog-actions .admin-access-button,
+.settings-dialog-actions .guest-access-button {
+  margin-top: 0;
+}
+.settings-dialog-actions .admin-access-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
 }
 .access-error {
   margin-top: 9px;

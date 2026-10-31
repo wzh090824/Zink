@@ -1,9 +1,9 @@
 name: Create New
-run-name: Short-${{ github.event.client_payload.code }}
+run-name: ${{ github.event.client_payload.operation == 'update_site_settings' && format('Settings-{0}', github.event.client_payload.requestId) || format('Short-{0}', github.event.client_payload.code) }}
 
 on:
   repository_dispatch:
-    types: [create_short_link]
+    types: [create_short_link, update_site_settings]
 
 permissions:
   contents: write
@@ -12,11 +12,67 @@ jobs:
   create:
     runs-on: ubuntu-latest
     steps:
-      - name: Validate and write short-link record
+      - name: Validate and write project record
         uses: actions/github-script@v7
         with:
           script: |
             const payload = context.payload.client_payload || {};
+            if (payload.operation === 'update_site_settings') {
+              const requestId = typeof payload.requestId === 'string' ? payload.requestId : '';
+              if (!/^[0-9a-f-]{36}$/i.test(requestId)) {
+                core.setFailed('The settings request ID is invalid.');
+                return;
+              }
+
+              const registrationNumber = typeof payload.registrationNumber === 'string' ? payload.registrationNumber.trim() : '';
+              const policeRegistrationNumber = typeof payload.policeRegistrationNumber === 'string' ? payload.policeRegistrationNumber.trim() : '';
+              if (Array.from(registrationNumber).length > 120 || Array.from(policeRegistrationNumber).length > 120) {
+                core.setFailed('Registration numbers can contain up to 120 characters.');
+                return;
+              }
+
+              const { owner, repo } = context.repo;
+              const branch = payload.branch || context.payload.repository.default_branch;
+              const record = {
+                registrationNumber,
+                policeRegistrationNumber,
+                updatedAt: new Date().toISOString(),
+              };
+              const blob = await github.rest.git.createBlob({
+                owner,
+                repo,
+                encoding: 'utf-8',
+                content: JSON.stringify(record, null, 2),
+              });
+
+              for (let attempt = 0; attempt < 5; attempt += 1) {
+                const head = await github.rest.git.getRef({ owner, repo, ref: `heads/${branch}` });
+                const parent = await github.rest.git.getCommit({ owner, repo, commit_sha: head.data.object.sha });
+                const tree = await github.rest.git.createTree({
+                  owner,
+                  repo,
+                  base_tree: parent.data.tree.sha,
+                  tree: [{ path: 'Site.json', mode: '100644', type: 'blob', sha: blob.data.sha }],
+                });
+                const commit = await github.rest.git.createCommit({
+                  owner,
+                  repo,
+                  message: 'Update footer registration details',
+                  tree: tree.data.sha,
+                  parents: [head.data.object.sha],
+                });
+
+                try {
+                  await github.rest.git.updateRef({ owner, repo, ref: `heads/${branch}`, sha: commit.data.sha, force: false });
+                  core.notice('Updated Site.json');
+                  return;
+                } catch (error) {
+                  if (error.status !== 422 || attempt === 4) throw error;
+                }
+              }
+              return;
+            }
+
             const code = typeof payload.code === 'string' ? payload.code.normalize('NFC') : '';
             const codePoints = Array.from(code).length;
             const codeBytes = Buffer.byteLength(code, 'utf8');

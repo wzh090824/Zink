@@ -21,7 +21,7 @@ const notFoundHtml = await readFile(
 test("Chinese and English translations cover both pages", () => {
   assert.deepEqual(supportedLanguages, ["zh-CN", "en"]);
   const keys = new Set(
-    [...`${pageHtml}\n${notFoundHtml}`.matchAll(/data-i18n(?:-placeholder|-aria-label)?="([^"]+)"/g)].map(
+    [...`${pageHtml}\n${notFoundHtml}`.matchAll(/data-i18n(?:-placeholder|-aria-label|-title)?="([^"]+)"/g)].map(
       (match) => match[1],
     ),
   );
@@ -32,6 +32,27 @@ test("Chinese and English translations cover both pages", () => {
     "languageSwitch",
     "errorExpiryIncomplete",
     "errorExpiryInvalid",
+    "footerSettings",
+    "footerSettingsEyebrow",
+    "footerSettingsTitle",
+    "footerSettingsDescription",
+    "registrationNumber",
+    "registrationNumberPlaceholder",
+    "policeRegistrationNumber",
+    "policeRegistrationNumberPlaceholder",
+    "closeDialog",
+    "cancel",
+    "saveSettings",
+    "errorRegistrationLength",
+    "settingsBuildFailureTitle",
+    "settingsStatusWaiting",
+    "settingsStatusQueued",
+    "settingsStatusRunning",
+    "settingsStatusSuccess",
+    "settingsStatusFailure",
+    "settingsBuildTitle",
+    "settingsBuildSuccessTitle",
+    "settingsUpdatedAt",
     "githubProject",
     "adminFormNote",
     "guestFormNote",
@@ -67,6 +88,12 @@ test("Chinese and English translations cover both pages", () => {
   assert.match(pageHtml, /data-i18n="beijingOptional"/);
   assert.doesNotMatch(pageHtml.match(/id="target-url"[\s\S]*?\/>/)?.[0] || "", /maxlength=/);
   assert.doesNotMatch(`${translationSource}\n${pageHtml}\n${notFoundHtml}`, /300 characters|300 个字符/);
+  assert.match(pageHtml, /id="footer-settings-button"[^>]*hidden/);
+  assert.match(pageHtml, /id="registration-number" hidden/);
+  assert.match(pageHtml, /id="police-registration-number" hidden/);
+  assert.match(pageHtml, /id="site-settings-form"/);
+  assert.match(pageHtml, /id="site-settings-dialog"/);
+  assert.match(pageHtml, /id="site-settings-language-toggle"/);
   assert.equal(
     translate("en", "uploadedAt", { time: "12:30" }),
     "Uploaded: 12:30 (Beijing time)",

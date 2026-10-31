@@ -23,7 +23,7 @@ test("GitHub Action writes metadata and refuses filename collisions", async () =
   assert.match(workflow, /^name: Create New$/m);
   assert.match(
     workflow,
-    /run-name: Short-\$\{\{ github\.event\.client_payload\.code \}\}/,
+    /run-name: \$\{\{ github\.event\.client_payload\.operation == 'update_site_settings'[\s\S]*format\('Short-\{0\}', github\.event\.client_payload\.code\) \}\}/,
   );
 
   const code = "NUL";
@@ -130,4 +130,112 @@ test("GitHub Action writes metadata and refuses filename collisions", async () =
   );
   assert.equal(collisionFailures.length, 1);
   assert.deepEqual(collisionCalls, []);
+});
+
+test("GitHub Action updates the root Site.json footer settings", async () => {
+  assert.match(workflow, /types: \[create_short_link, update_site_settings\]/);
+  assert.match(
+    workflow,
+    /format\('Settings-\{0\}'/,
+  );
+  const calls = [];
+  const github = {
+    rest: {
+      git: {
+        createBlob: async ({ content }) => {
+          calls.push({ type: "blob", content });
+          return { data: { sha: "settings-blob" } };
+        },
+        getRef: async () => ({ data: { object: { sha: "head" } } }),
+        getCommit: async () => ({ data: { tree: { sha: "base-tree" } } }),
+        createTree: async ({ tree }) => {
+          calls.push({ type: "tree", tree });
+          return { data: { sha: "new-tree" } };
+        },
+        createCommit: async ({ message }) => {
+          calls.push({ type: "commit", message });
+          return { data: { sha: "new-commit" } };
+        },
+        updateRef: async ({ force }) => calls.push({ type: "update", force }),
+      },
+    },
+  };
+  const failures = [];
+  const notices = [];
+  const context = {
+    repo: { owner: "owner", repo: "links" },
+    payload: {
+      client_payload: {
+        operation: "update_site_settings",
+        requestId: "12345678-1234-4234-8234-123456789abc",
+        registrationNumber: "京 ICP 备 12345678 号",
+        policeRegistrationNumber: "京公网安备 11000000000000 号",
+        branch: "main",
+      },
+      repository: { default_branch: "main" },
+    },
+  };
+
+  await new AsyncFunction(
+    "github",
+    "context",
+    "core",
+    "Buffer",
+    "URL",
+    actionScript,
+  )(
+    github,
+    context,
+    {
+      notice: (message) => notices.push(message),
+      setFailed: (message) => failures.push(message),
+    },
+    Buffer,
+    URL,
+  );
+
+  assert.deepEqual(failures, []);
+  const record = JSON.parse(calls.find((call) => call.type === "blob").content);
+  assert.equal(record.registrationNumber, "京 ICP 备 12345678 号");
+  assert.equal(record.policeRegistrationNumber, "京公网安备 11000000000000 号");
+  assert.ok(Number.isFinite(Date.parse(record.updatedAt)));
+  assert.deepEqual(calls.find((call) => call.type === "tree").tree[0], {
+    path: "Site.json",
+    mode: "100644",
+    type: "blob",
+    sha: "settings-blob",
+  });
+  assert.equal(calls.find((call) => call.type === "commit").message, "Update footer registration details");
+  assert.deepEqual(calls.find((call) => call.type === "update"), {
+    type: "update",
+    force: false,
+  });
+  assert.deepEqual(notices, ["Updated Site.json"]);
+
+  const invalidFailures = [];
+  const invalidContext = {
+    ...context,
+    payload: {
+      ...context.payload,
+      client_payload: {
+        ...context.payload.client_payload,
+        registrationNumber: "备案".repeat(121),
+      },
+    },
+  };
+  await new AsyncFunction(
+    "github",
+    "context",
+    "core",
+    "Buffer",
+    "URL",
+    actionScript,
+  )(
+    github,
+    invalidContext,
+    { notice: () => {}, setFailed: (message) => invalidFailures.push(message) },
+    Buffer,
+    URL,
+  );
+  assert.deepEqual(invalidFailures, ["Registration numbers can contain up to 120 characters."]);
 });

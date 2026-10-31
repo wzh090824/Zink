@@ -45,11 +45,14 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
   };
   let runStatus = "waiting";
   let lastDispatch;
+  let lastEventType;
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input, init = {}) => {
     const url = new URL(String(input));
     if (url.pathname.endsWith("/dispatches")) {
-      lastDispatch = JSON.parse(init.body).client_payload;
+      const payload = JSON.parse(init.body);
+      lastEventType = payload.event_type;
+      lastDispatch = payload.client_payload;
       return new Response(null, { status: 204 });
     }
     if (url.pathname.endsWith("/actions/runs")) {
@@ -58,7 +61,10 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
           ? []
           : [
               {
-                display_title: `Short-${lastDispatch.code}`,
+                display_title:
+                  lastDispatch.operation === "update_site_settings"
+                    ? `Settings-${lastDispatch.requestId}`
+                    : `Short-${lastDispatch.code}`,
                 created_at:
                   runStatus === "stale"
                     ? new Date(Date.parse(lastDispatch.requestedAt) - 1000).toISOString()
@@ -96,11 +102,11 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
       headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(body),
     });
-  const actionStatus = (data, code = data.code, headers = {}) =>
-    request(
-      `/__api/actions?requestId=${data.requestId}&code=${encodeURIComponent(code)}&requestedAt=${encodeURIComponent(data.requestedAt)}`,
-      { headers },
-    );
+  const actionStatus = (data, code = data.code, headers = {}, kind = "short-link") => {
+    const query = new URLSearchParams({ requestId: data.requestId, requestedAt: data.requestedAt, kind });
+    if (code) query.set("code", code);
+    return request(`/__api/actions?${query}`, { headers });
+  };
 
   const health = await request("/__api/health");
   assert.equal(health.status, 200);
@@ -124,6 +130,69 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
     (await rejectedPasswordEnglish.json()).error,
     "Incorrect access password.",
   );
+
+  const initialSettings = await request("/__api/site-settings");
+  assert.equal(initialSettings.status, 200);
+  assert.deepEqual(await initialSettings.json(), {
+    registrationNumber: "",
+    policeRegistrationNumber: "",
+  });
+  const unauthorizedSettings = await request("/__api/site-settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Admin-Key": "wrong" },
+    body: JSON.stringify({ registrationNumber: "京 ICP 备 12345678 号" }),
+  });
+  assert.equal(unauthorizedSettings.status, 401);
+  const invalidSettings = await request("/__api/site-settings", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-Key": "test-admin-key",
+    },
+    body: JSON.stringify({ registrationNumber: "备".repeat(121) }),
+  });
+  assert.equal(invalidSettings.status, 400);
+  const saveSettingsResponse = await request("/__api/site-settings", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-Key": "test-admin-key",
+    },
+    body: JSON.stringify({
+      registrationNumber: " 京 ICP 备 12345678 号 ",
+      policeRegistrationNumber: "京公网安备 11000000000000 号",
+    }),
+  });
+  assert.equal(saveSettingsResponse.status, 202);
+  const settingsRequest = await saveSettingsResponse.json();
+  assert.equal(lastEventType, "update_site_settings");
+  assert.equal(lastDispatch.operation, "update_site_settings");
+  assert.equal(lastDispatch.registrationNumber, "京 ICP 备 12345678 号");
+  assert.equal(lastDispatch.policeRegistrationNumber, "京公网安备 11000000000000 号");
+  assert.equal((await (await actionStatus(settingsRequest, "", {}, "site-settings")).json()).state, "waiting");
+  runStatus = "queued";
+  assert.equal((await (await actionStatus(settingsRequest, "", {}, "site-settings")).json()).state, "queued");
+  runStatus = "in_progress";
+  assert.equal((await (await actionStatus(settingsRequest, "", {}, "site-settings")).json()).state, "running");
+  const settingsUpdatedAt = new Date().toISOString();
+  records.set("Site.json", {
+    registrationNumber: "京 ICP 备 12345678 号",
+    policeRegistrationNumber: "京公网安备 11000000000000 号",
+    updatedAt: settingsUpdatedAt,
+  });
+  runStatus = "completed";
+  const settingsCompleted = await (await actionStatus(settingsRequest, "", {}, "site-settings")).json();
+  assert.equal(settingsCompleted.state, "success");
+  assert.equal(settingsCompleted.uploadedAt, settingsUpdatedAt);
+  assert.deepEqual(await (await request("/__api/site-settings")).json(), {
+    registrationNumber: "京 ICP 备 12345678 号",
+    policeRegistrationNumber: "京公网安备 11000000000000 号",
+  });
+  const invalidActionKind = await request(
+    `/__api/actions?requestId=${settingsRequest.requestId}&requestedAt=${settingsRequest.requestedAt}&kind=unknown`,
+  );
+  assert.equal(invalidActionKind.status, 400);
+  runStatus = "waiting";
 
   const guestCustomCode = await create({
     code: "custom",

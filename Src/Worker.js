@@ -20,6 +20,10 @@ export default {
     }
     if (url.pathname === `${API}/access` && request.method === "POST")
       return verifyAdminAccess(request, env);
+    if (url.pathname === `${API}/site-settings`) {
+      if (request.method === "GET") return getPublicSiteSettings(request, env);
+      if (request.method === "POST") return updateSiteSettings(request, env);
+    }
     if (url.pathname === `${API}/links` && request.method === "POST")
       return createLink(request, env);
     if (url.pathname === `${API}/actions` && request.method === "GET")
@@ -74,6 +78,171 @@ async function verifyAdminAccess(request, env) {
       401,
     );
   return jsonResponse({ authenticated: true });
+}
+
+async function getPublicSiteSettings(request, env) {
+  if (!env.GH_TOKEN || !hasRepository(env))
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "Cloudflare Worker 尚未完成 GitHub 配置。",
+          "GitHub is not configured for this Cloudflare Worker.",
+        ),
+      },
+      503,
+    );
+
+  const file = await getGithubFilePath("Site.json", env);
+  if (file.kind === "error")
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "暂时无法读取页脚信息，请稍后重试。",
+          "Could not read footer details. Please try again.",
+        ),
+      },
+      502,
+    );
+  return jsonResponse({
+    registrationNumber:
+      typeof file.registrationNumber === "string" ? file.registrationNumber : "",
+    policeRegistrationNumber:
+      typeof file.policeRegistrationNumber === "string"
+        ? file.policeRegistrationNumber
+        : "",
+  });
+}
+
+async function updateSiteSettings(request, env) {
+  if (!env.ADMIN_KEY)
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "管理员访问密码尚未配置。",
+          "The admin password is not configured.",
+        ),
+      },
+      503,
+    );
+  if (!constantTimeEqual(request.headers.get("X-Admin-Key") || "", env.ADMIN_KEY))
+    return jsonResponse(
+      { error: localized(request, "访问密码不正确。", "Incorrect access password.") },
+      401,
+    );
+  if (!env.GH_TOKEN || !hasRepository(env))
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "Cloudflare Worker 尚未完成 GitHub 配置。",
+          "GitHub is not configured for this Cloudflare Worker.",
+        ),
+      },
+      503,
+    );
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse(
+      { error: localized(request, "请求内容必须是 JSON。", "Request body must be JSON.") },
+      400,
+    );
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body))
+    return jsonResponse(
+      { error: localized(request, "请求内容无效。", "Request body is invalid.") },
+      400,
+    );
+  if (
+    (body.registrationNumber !== undefined &&
+      typeof body.registrationNumber !== "string") ||
+    (body.policeRegistrationNumber !== undefined &&
+      typeof body.policeRegistrationNumber !== "string")
+  )
+    return jsonResponse(
+      { error: localized(request, "备案号格式无效。", "Registration numbers must be text.") },
+      400,
+    );
+  const registrationNumber =
+    typeof body.registrationNumber === "string" ? body.registrationNumber.trim() : "";
+  const policeRegistrationNumber =
+    typeof body.policeRegistrationNumber === "string"
+      ? body.policeRegistrationNumber.trim()
+      : "";
+  if (
+    Array.from(registrationNumber).length > 120 ||
+    Array.from(policeRegistrationNumber).length > 120
+  )
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "每个备案号最多 120 个字符。",
+          "Each registration number can contain up to 120 characters.",
+        ),
+      },
+      400,
+    );
+
+  const requestId = crypto.randomUUID();
+  const requestedAt = new Date().toISOString();
+  let dispatch;
+  try {
+    dispatch = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(env.GH_OWNER)}/${encodeURIComponent(env.GH_REPO)}/dispatches`,
+      {
+        method: "POST",
+        headers: githubHeaders(env.GH_TOKEN),
+        body: JSON.stringify({
+          event_type: "update_site_settings",
+          client_payload: {
+            operation: "update_site_settings",
+            requestId,
+            requestedAt,
+            registrationNumber,
+            policeRegistrationNumber,
+            branch: env.GH_BRANCH || "",
+          },
+        }),
+      },
+    );
+  } catch {
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "无法连接 GitHub，请稍后重试。",
+          "Could not connect to GitHub. Please try again.",
+        ),
+      },
+      502,
+    );
+  }
+  if ([401, 403, 404].includes(dispatch.status))
+    return jsonResponse(
+      {
+        error: localized(
+          request,
+          "GitHub 仓库或 Token 配置无效，或 Token 缺少 Contents/Actions 权限。",
+          "The GitHub repository or token is invalid, or the token lacks Contents/Actions permissions.",
+        ),
+      },
+      502,
+    );
+  if (!dispatch.ok)
+    return jsonResponse(
+      {
+        error: localized(request, "GitHub 未能接受保存请求。", "GitHub did not accept the save request."),
+      },
+      502,
+    );
+
+  return jsonResponse({ accepted: true, requestId, requestedAt }, 202);
 }
 
 async function createLink(request, env) {
@@ -341,10 +510,17 @@ async function getActionStatus(request, url, env) {
       502,
     );
   const data = await response.json();
+  const kind = url.searchParams.get("kind") || "short-link";
+  if (kind !== "short-link" && kind !== "site-settings")
+    return jsonResponse(
+      { error: localized(request, "请求类型无效。", "Invalid request type.") },
+      400,
+    );
   const code = url.searchParams.get("code") || "";
   const run = (data.workflow_runs || []).find(
     (item) =>
-      item.display_title === `Short-${code}` &&
+      item.display_title ===
+        (kind === "site-settings" ? `Settings-${requestId}` : `Short-${code}`) &&
       Date.parse(item.created_at || "") >= requestedAt,
   );
   if (!run)
@@ -392,7 +568,11 @@ async function getActionStatus(request, url, env) {
             `The Action failed (${run.conclusion || "unknown"}).`,
           );
     if (result.state === "success") {
-      if (validCode(code)) {
+      if (kind === "site-settings") {
+        const settings = await getGithubFilePath("Site.json", env);
+        if (settings.kind === "found" && settings.updatedAt)
+          result.uploadedAt = settings.updatedAt;
+      } else if (validCode(code)) {
         const file = await getGithubFile(code, env);
         if (file.kind === "found" && file.uploadedAt)
           result.uploadedAt = file.uploadedAt;
@@ -431,12 +611,15 @@ async function redirectForCode(code, request, env) {
 }
 
 async function getGithubFile(code, env, directory = "List") {
-  if (!hasRepository(env)) return { kind: "error" };
-  const fileName = fileNameForCode(code);
-  const filePath = `${directory}/${fileName}`
+  const filePath = `${directory}/${fileNameForCode(code)}`
     .split("/")
     .map(encodeURIComponent)
     .join("/");
+  return getGithubFilePath(filePath, env, code);
+}
+
+async function getGithubFilePath(filePath, env, code = "") {
+  if (!hasRepository(env)) return { kind: "error" };
   const endpoint = `https://api.github.com/repos/${encodeURIComponent(env.GH_OWNER)}/${encodeURIComponent(env.GH_REPO)}/contents/${filePath}${env.GH_BRANCH ? `?ref=${encodeURIComponent(env.GH_BRANCH)}` : ""}`;
   try {
     const response = await fetch(endpoint, {
@@ -462,15 +645,12 @@ async function getGithubFile(code, env, directory = "List") {
     } catch {
       record = null;
     }
-    if (
-      record &&
-      typeof record === "object" &&
-      typeof record.url === "string"
-    ) {
+    if (record && typeof record === "object" && !Array.isArray(record)) {
       return {
         kind: "found",
         raw,
-        url: record.url,
+        ...record,
+        url: typeof record.url === "string" ? record.url : "",
         code: typeof record.code === "string" ? record.code : code,
         ip: typeof record.ip === "string" ? record.ip : "",
         uploadedAt:

@@ -38,6 +38,9 @@
         </div>
         <div class="access-controls">
           <span class="access-badge" id="access-badge" data-i18n="chooseAccess">选择访问模式</span>
+          <button class="change-mode-button" id="footer-settings-button" type="button" data-i18n="footerSettings" hidden>
+            页脚备案设置
+          </button>
           <button class="change-mode-button" id="change-mode" type="button">
             <span id="change-mode-label" data-i18n="accessSettings">访问设置</span>
           </button>
@@ -150,6 +153,8 @@
       <footer class="page-footer">
         <span data-i18n="footerNoDatabase">无数据库 · Cloudflare + GitHub</span>
         <span data-i18n="footerStorage">短码映射存储于仓库文件</span>
+        <span class="site-registration" id="registration-number" hidden></span>
+        <span class="site-registration" id="police-registration-number" hidden></span>
       </footer>
     </div>
 
@@ -181,6 +186,32 @@
         <button class="guest-access-button" id="guest-access-button" type="button" data-i18n="guestContinue">
           跳过，访客继续
         </button>
+      </form>
+    </dialog>
+
+    <dialog class="access-dialog site-settings-dialog" id="site-settings-dialog" aria-labelledby="site-settings-title">
+      <form id="site-settings-form" novalidate>
+        <div class="access-dialog-tools">
+          <p class="dialog-eyebrow" data-i18n="footerSettingsEyebrow">FOOTER REGISTRATION</p>
+          <button class="language-toggle" id="site-settings-language-toggle" type="button" aria-label="切换到 English" title="切换到 English">
+            <span class="language-icon language-icon-zh" aria-hidden="true">中</span>
+            <span class="language-icon language-icon-en" aria-hidden="true">EN</span>
+          </button>
+          <button class="icon-button" id="close-site-settings" type="button" data-i18n-aria-label="closeDialog" data-i18n-title="closeDialog" aria-label="关闭弹窗" title="关闭弹窗">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+          </button>
+        </div>
+        <h2 id="site-settings-title" data-i18n="footerSettingsTitle">页脚备案信息</h2>
+        <p class="dialog-description" data-i18n="footerSettingsDescription">留空的信息不会显示。保存后由 GitHub Action 写入项目根目录的 Site.json。</p>
+        <label for="registration-number-input" data-i18n="registrationNumber">ICP备案号</label>
+        <input id="registration-number-input" name="registrationNumber" type="text" maxlength="120" autocomplete="off" data-i18n-placeholder="registrationNumberPlaceholder" placeholder="例如：京 ICP 备 12345678 号" />
+        <label for="police-registration-number-input" data-i18n="policeRegistrationNumber">公安网备案号</label>
+        <input id="police-registration-number-input" name="policeRegistrationNumber" type="text" maxlength="120" autocomplete="off" data-i18n-placeholder="policeRegistrationNumberPlaceholder" placeholder="例如：京公网安备 11000000000000 号" />
+        <div class="access-error" id="site-settings-error" role="alert" hidden></div>
+        <div class="settings-dialog-actions">
+          <button class="guest-access-button" id="cancel-site-settings" type="button" data-i18n="cancel">取消</button>
+          <button class="admin-access-button" id="save-site-settings" type="submit" data-i18n="saveSettings">保存</button>
+        </div>
       </form>
     </dialog>
 

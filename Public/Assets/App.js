@@ -17,6 +17,15 @@ const accessError = document.querySelector("#access-error");
 const adminAccessButton = document.querySelector("#admin-access-button");
 const customCodeField = document.querySelector("#custom-code-field");
 const guestCodeNote = document.querySelector("#guest-code-note");
+const footerSettingsButton = document.querySelector("#footer-settings-button");
+const siteSettingsDialog = document.querySelector("#site-settings-dialog");
+const siteSettingsForm = document.querySelector("#site-settings-form");
+const siteSettingsError = document.querySelector("#site-settings-error");
+const registrationNumberInput = document.querySelector("#registration-number-input");
+const policeRegistrationNumberInput = document.querySelector("#police-registration-number-input");
+const saveSiteSettingsButton = document.querySelector("#save-site-settings");
+const registrationNumberOutput = document.querySelector("#registration-number");
+const policeRegistrationNumberOutput = document.querySelector("#police-registration-number");
 const languageButtons = document.querySelectorAll(".language-toggle");
 const themeToggle = document.querySelector("#theme-toggle");
 const githubLink = document.querySelector("#github-link");
@@ -26,6 +35,8 @@ const buildStatus = document.querySelector("#build-status");
 const buildRing = document.querySelector("#build-ring");
 const ringProgress = document.querySelector("#build-ring-progress");
 const buildResultLink = document.querySelector("#build-result-link");
+const buildLinkBlock = document.querySelector(".build-link-block");
+const buildDialogActions = document.querySelector(".build-dialog-actions");
 const uploadedAt = document.querySelector("#uploaded-at");
 const copyButton = document.querySelector("#copy-link");
 const ringCircumference = 2 * Math.PI * 52;
@@ -35,6 +46,8 @@ let accessMode = null;
 let adminKey = "";
 let actionPollToken = 0;
 let lastUploadedAt = "";
+let currentBuildKind = "short-link";
+let siteSettings = { registrationNumber: "", policeRegistrationNumber: "" };
 
 function preferredLanguage() {
   try {
@@ -58,6 +71,9 @@ function applyLanguage(language) {
   document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
     element.placeholder = t(element.dataset.i18nPlaceholder);
   });
+  document.querySelectorAll("[data-i18n-title]").forEach((element) => {
+    element.title = t(element.dataset.i18nTitle);
+  });
   document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
     element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel));
   });
@@ -66,9 +82,10 @@ function applyLanguage(language) {
     button.title = t("languageSwitch");
   });
   if (lastUploadedAt) {
-    uploadedAt.textContent = t("uploadedAt", {
-      time: formatBeijingTime(lastUploadedAt, locale),
-    });
+    uploadedAt.textContent = t(
+      currentBuildKind === "site-settings" ? "settingsUpdatedAt" : "uploadedAt",
+      { time: formatBeijingTime(lastUploadedAt, locale) },
+    );
   }
   githubLink.setAttribute("aria-label", t("githubProject"));
   githubLink.title = t("githubProject");
@@ -136,6 +153,83 @@ themeToggle.addEventListener("click", () =>
 document.querySelector("#origin-prefix").textContent =
   `${window.location.host}/`;
 
+function renderSiteSettings(settings) {
+  siteSettings = {
+    registrationNumber:
+      typeof settings.registrationNumber === "string"
+        ? settings.registrationNumber
+        : "",
+    policeRegistrationNumber:
+      typeof settings.policeRegistrationNumber === "string"
+        ? settings.policeRegistrationNumber
+        : "",
+  };
+  registrationNumberOutput.textContent = siteSettings.registrationNumber;
+  registrationNumberOutput.hidden = !siteSettings.registrationNumber;
+  policeRegistrationNumberOutput.textContent = siteSettings.policeRegistrationNumber;
+  policeRegistrationNumberOutput.hidden = !siteSettings.policeRegistrationNumber;
+}
+
+async function loadSiteSettings() {
+  const response = await fetch("/__api/site-settings", {
+    headers: requestHeaders({ Accept: "application/json" }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || t("unknownError"));
+  renderSiteSettings(data);
+}
+
+footerSettingsButton.addEventListener("click", () => {
+  if (accessMode !== "admin") return;
+  siteSettingsError.hidden = true;
+  registrationNumberInput.value = siteSettings.registrationNumber;
+  policeRegistrationNumberInput.value = siteSettings.policeRegistrationNumber;
+  siteSettingsDialog.showModal();
+  registrationNumberInput.focus();
+});
+document
+  .querySelector("#close-site-settings")
+  .addEventListener("click", () => siteSettingsDialog.close());
+document
+  .querySelector("#cancel-site-settings")
+  .addEventListener("click", () => siteSettingsDialog.close());
+siteSettingsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  siteSettingsError.hidden = true;
+  if (accessMode !== "admin" || !adminKey) {
+    siteSettingsError.textContent = t("accessPasswordInvalid");
+    siteSettingsError.hidden = false;
+    return;
+  }
+
+  saveSiteSettingsButton.disabled = true;
+  saveSiteSettingsButton.textContent = t("submitting");
+  try {
+    const response = await fetch("/__api/site-settings", {
+      method: "POST",
+      headers: requestHeaders({
+        "Content-Type": "application/json",
+        "X-Admin-Key": adminKey,
+      }),
+      body: JSON.stringify({
+        registrationNumber: registrationNumberInput.value,
+        policeRegistrationNumber: policeRegistrationNumberInput.value,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || t("unknownError"));
+    siteSettingsDialog.close();
+    startBuildAnimation("site-settings");
+    void watchAction(data.requestId, "", data.requestedAt, "site-settings");
+  } catch (error) {
+    siteSettingsError.textContent = error.message || t("unknownError");
+    siteSettingsError.hidden = false;
+  } finally {
+    saveSiteSettingsButton.disabled = false;
+    saveSiteSettingsButton.textContent = t("saveSettings");
+  }
+});
+
 expiryPreset.addEventListener("change", () => {
   errorBox.hidden = true;
   if (expiryPreset.value === "custom") {
@@ -185,6 +279,7 @@ function showAccessMode(mode, key = "") {
     else sessionStorage.removeItem("shortlink-admin-key");
   } catch {}
   const isAdmin = mode === "admin";
+  footerSettingsButton.hidden = !isAdmin;
   customCodeField.hidden = !isAdmin;
   guestCodeNote.hidden = isAdmin;
   document.querySelector("#access-badge").textContent = t(
@@ -297,25 +392,37 @@ function validUrl(value) {
   }
 }
 
-function startBuildAnimation() {
+function startBuildAnimation(kind = "short-link") {
+  currentBuildKind = kind;
   ringProgress.style.strokeDasharray = "90 327";
   ringProgress.style.strokeDashoffset = "0";
   buildDialog.dataset.state = "running";
   buildRing.dataset.state = "running";
-  buildDialogTitle.textContent = t("buildTitle");
-  buildStatus.textContent = t("statusWaiting");
+  buildDialogTitle.textContent = t(
+    kind === "site-settings" ? "settingsBuildTitle" : "buildTitle",
+  );
+  buildStatus.textContent = t(
+    kind === "site-settings" ? "settingsStatusWaiting" : "statusWaiting",
+  );
   uploadedAt.hidden = true;
   lastUploadedAt = "";
+  buildLinkBlock.hidden = kind === "site-settings";
+  buildDialogActions.hidden = kind === "site-settings";
   if (!buildDialog.open) buildDialog.showModal();
 }
 
 function setBuildState(state, messageKey) {
   const messages = {
-    waiting: "statusWaiting",
-    queued: "statusQueued",
-    running: "statusRunning",
-    success: "statusSuccess",
-    failure: "statusFailure",
+    waiting:
+      currentBuildKind === "site-settings" ? "settingsStatusWaiting" : "statusWaiting",
+    queued:
+      currentBuildKind === "site-settings" ? "settingsStatusQueued" : "statusQueued",
+    running:
+      currentBuildKind === "site-settings" ? "settingsStatusRunning" : "statusRunning",
+    success:
+      currentBuildKind === "site-settings" ? "settingsStatusSuccess" : "statusSuccess",
+    failure:
+      currentBuildKind === "site-settings" ? "settingsStatusFailure" : "statusFailure",
   };
   const finished = state === "success" || state === "failure";
   buildDialog.dataset.state = finished ? state : "running";
@@ -326,10 +433,16 @@ function setBuildState(state, messageKey) {
   }
   buildDialogTitle.textContent = t(
     state === "success"
-      ? "buildSuccessTitle"
+      ? currentBuildKind === "site-settings"
+        ? "settingsBuildSuccessTitle"
+        : "buildSuccessTitle"
       : state === "failure"
-        ? "buildFailureTitle"
-        : "buildTitle",
+        ? currentBuildKind === "site-settings"
+          ? "settingsBuildFailureTitle"
+          : "buildFailureTitle"
+        : currentBuildKind === "site-settings"
+          ? "settingsBuildTitle"
+          : "buildTitle",
   );
   buildStatus.textContent = t(messageKey || messages[state] || "statusRunning");
 }
@@ -338,7 +451,7 @@ document
   .querySelector("#close-build")
   .addEventListener("click", () => buildDialog.close());
 
-async function watchAction(requestId, code, requestedAt) {
+async function watchAction(requestId, code, requestedAt, kind = "short-link") {
   const token = ++actionPollToken;
   let firstRequest = true;
   while (token === actionPollToken) {
@@ -348,7 +461,8 @@ async function watchAction(requestId, code, requestedAt) {
     }
     firstRequest = false;
     try {
-      const query = new URLSearchParams({ requestId, code, requestedAt });
+      const query = new URLSearchParams({ requestId, requestedAt, kind });
+      if (code) query.set("code", code);
       const response = await fetch(`/__api/actions?${query}`, {
         headers: requestHeaders({ Accept: "application/json" }),
       });
@@ -357,11 +471,13 @@ async function watchAction(requestId, code, requestedAt) {
         throw new Error(data.error || t("statusRetry"));
       setBuildState(data.state);
       if (data.state === "success") {
+        if (kind === "site-settings") await loadSiteSettings().catch(() => {});
         if (data.uploadedAt) {
           lastUploadedAt = data.uploadedAt;
-          uploadedAt.textContent = t("uploadedAt", {
-            time: formatBeijingTime(lastUploadedAt, locale),
-          });
+          uploadedAt.textContent = t(
+            kind === "site-settings" ? "settingsUpdatedAt" : "uploadedAt",
+            { time: formatBeijingTime(lastUploadedAt, locale) },
+          );
           uploadedAt.hidden = false;
         }
         return;
@@ -451,3 +567,4 @@ copyButton.addEventListener("click", async () => {
 
 restoreAccessMode();
 loadServiceStatus();
+loadSiteSettings().catch(() => {});
