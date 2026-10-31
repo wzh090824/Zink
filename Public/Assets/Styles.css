@@ -353,36 +353,12 @@ input:focus-visible {
   color: var(--muted);
   font-size: 10px;
 }
-.run-link {
-  display: block;
-  width: fit-content;
-  margin: 7px auto 0;
-  color: var(--ink-soft);
-  font-size: 11px;
-  text-decoration: none;
-}
-.run-link:hover {
-  text-decoration: underline;
-}
 .form-note {
   margin: 14px 0 7px;
   color: var(--muted);
   font-size: 11px;
   line-height: 1.65;
   text-align: center;
-}
-.action-link {
-  display: block;
-  width: fit-content;
-  margin: 0 auto;
-  color: var(--ink-soft);
-  font-size: 11px;
-  line-height: 1.6;
-  text-align: center;
-  text-decoration: none;
-}
-.action-link:hover {
-  text-decoration: underline;
 }
 .page-footer {
   min-height: 52px;
@@ -750,13 +726,6 @@ input:focus-visible {
   border-radius: 6px;
   font-size: 12px;
 }
-.build-dialog .run-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin: 0;
-  font-size: 12px;
-}
 @keyframes build-dialog-in {
   from {
     opacity: 0;
@@ -791,7 +760,6 @@ body,
 .theme-toggle,
 .submit-button,
 .form-note,
-.action-link,
 .page-footer,
 .access-dialog,
 .build-dialog,

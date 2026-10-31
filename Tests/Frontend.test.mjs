@@ -38,7 +38,6 @@ test("Chinese and English translations cover both pages", () => {
     "statusFailure",
     "statusRetry",
     "statusLongWait",
-    "statusTimeout",
   ]) {
     keys.add(key);
   }
@@ -51,4 +50,9 @@ test("Chinese and English translations cover both pages", () => {
   assert.equal(translate("en", "pageTitle"), "Create a short link");
   assert.equal(translate("zh-CN", "pageTitle"), "创建短链");
   assert.equal(translate("en", "uploadedAt", { time: "12:30" }), "Uploaded: 12:30");
+});
+
+test("build status is displayed without GitHub Action links", () => {
+  assert.doesNotMatch(pageHtml, /id="action-link"|id="run-link"/);
+  assert.doesNotMatch(pageHtml, /href="https:\/\/github\.com/);
 });

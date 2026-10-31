@@ -23,7 +23,6 @@ const ringProgress = document.querySelector("#build-ring-progress");
 const countdownValue = document.querySelector("#countdown-value");
 const buildResultLink = document.querySelector("#build-result-link");
 const uploadedAt = document.querySelector("#uploaded-at");
-const runLink = document.querySelector("#run-link");
 const copyButton = document.querySelector("#copy-link");
 const ringCircumference = 2 * Math.PI * 52;
 const countdownSeconds = 60;
@@ -223,16 +222,12 @@ function restoreAccessMode() {
 async function loadServiceStatus() {
   const status = document.querySelector("#service-status");
   const dot = document.querySelector("#state-dot");
-  const actionLink = document.querySelector("#action-link");
   try {
     const response = await fetch("/__api/health", {
       headers: requestHeaders({ Accept: "application/json" }),
     });
     if (!response.ok) throw new Error("Worker unavailable");
     const data = await response.json();
-    actionLink.href = data.repositoryUrl
-      ? `${data.repositoryUrl}/actions`
-      : "https://github.com";
     status.textContent = data.ready
       ? t("serviceReady")
       : t("serviceUnconfigured");
@@ -240,7 +235,6 @@ async function loadServiceStatus() {
   } catch {
     status.textContent = t("serviceOffline");
     dot.className = "state-dot offline";
-    actionLink.href = "https://github.com";
   }
 }
 
@@ -321,14 +315,16 @@ document
   .addEventListener("click", () => buildDialog.close());
 buildDialog.addEventListener("close", stopCountdown);
 
-async function watchAction(requestId, code, actionsUrl) {
+async function watchAction(requestId, code) {
   const token = ++actionPollToken;
-  runLink.href = actionsUrl;
-  runLink.hidden = false;
-  for (let attempt = 0; attempt < 150; attempt += 1) {
-    if (token !== actionPollToken) return;
-    if (attempt > 0)
-      await new Promise((resolve) => window.setTimeout(resolve, 2000));
+  let attempt = 0;
+  while (token === actionPollToken) {
+    if (attempt > 0) {
+      const delay = attempt < 150 ? 2000 : 10000;
+      await new Promise((resolve) => window.setTimeout(resolve, delay));
+      if (token !== actionPollToken) return;
+    }
+    attempt += 1;
     try {
       const query = new URLSearchParams({ requestId, code });
       const response = await fetch(`/__api/actions?${query}`, {
@@ -338,7 +334,6 @@ async function watchAction(requestId, code, actionsUrl) {
       if (!response.ok)
         throw new Error(data.error || t("statusRetry"));
       setBuildState(data.state);
-      if (data.runUrl) runLink.href = data.runUrl;
       if (data.state === "success") {
         if (data.uploadedAt) {
           const time = new Date(data.uploadedAt);
@@ -355,8 +350,6 @@ async function watchAction(requestId, code, actionsUrl) {
       buildStatus.textContent = t("statusRetry");
     }
   }
-  if (token === actionPollToken)
-    buildStatus.textContent = t("statusTimeout");
 }
 
 form.addEventListener("submit", async (event) => {
@@ -399,11 +392,10 @@ form.addEventListener("submit", async (event) => {
 
     buildResultLink.href = data.shortUrl;
     buildResultLink.textContent = data.shortUrl;
-    runLink.hidden = true;
     startCountdown();
     codeInput.value = "";
     expiryInput.value = "";
-    void watchAction(data.requestId, data.code, data.actionsUrl);
+    void watchAction(data.requestId, data.code);
   } catch (error) {
     showError(error.message || t("unknownError"));
   } finally {

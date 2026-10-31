@@ -15,9 +15,6 @@ export default {
         repository: repositoryConfigured
           ? `${env.GITHUB_OWNER}/${env.GITHUB_REPO}`
           : "",
-        repositoryUrl: repositoryConfigured
-          ? `https://github.com/${env.GITHUB_OWNER}/${env.GITHUB_REPO}`
-          : "https://github.com",
         branch: env.GITHUB_BRANCH || "default",
       });
     }
@@ -275,7 +272,6 @@ async function createLink(request, env) {
       code,
       requestId,
       shortUrl: `${new URL(request.url).origin}/${routeSegmentForCode(code)}`,
-      actionsUrl: `${repositoryUrl(env)}/actions`,
     },
     202,
   );
@@ -372,8 +368,6 @@ async function getActionStatus(request, url, env) {
       state: "running",
       message: localized(request, "Action 正在处理。", "The Action is processing the request."),
     }),
-    runId: run.id,
-    runUrl: run.html_url,
   };
   if (run.status === "completed") {
     result.state = run.conclusion === "success" ? "success" : "failure";
@@ -382,8 +376,8 @@ async function getActionStatus(request, url, env) {
         ? localized(request, "Action 已完成，短链现在可以访问。", "The Action completed. The short link is ready.")
         : localized(
             request,
-            `Action 执行失败（${run.conclusion || "unknown"}），请打开日志查看原因。`,
-            `The Action failed (${run.conclusion || "unknown"}). Open the log for details.`,
+            `Action 执行失败（${run.conclusion || "unknown"}）。`,
+            `The Action failed (${run.conclusion || "unknown"}).`,
           );
     if (result.state === "success") {
       const code = url.searchParams.get("code") || "";
@@ -556,10 +550,6 @@ function hasRepository(env) {
       env.GITHUB_OWNER !== "YOUR_GITHUB_USERNAME" &&
       env.GITHUB_REPO !== "YOUR_REPOSITORY",
   );
-}
-
-function repositoryUrl(env) {
-  return `https://github.com/${env.GITHUB_OWNER}/${env.GITHUB_REPO}`;
 }
 
 function githubHeaders(token) {

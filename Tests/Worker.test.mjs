@@ -57,8 +57,6 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
                 display_title: `Short link ${lastDispatch.requestId}`,
                 status: runStatus,
                 conclusion: runStatus === "completed" ? "success" : null,
-                id: 123,
-                html_url: "https://github.com/owner/links/actions/runs/123",
               },
             ];
       return Response.json({ workflow_runs: workflowRuns });
@@ -161,6 +159,7 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
   const admin = await adminCreate.json();
   assert.equal(adminCreate.status, 202);
   assert.equal(admin.code, code);
+  assert.equal(Object.hasOwn(admin, "actionsUrl"), false);
   assert.equal(lastDispatch.ip, "2001:db8::8");
   assert.equal(lastDispatch.expiresAt, expiresAt);
 
@@ -199,10 +198,7 @@ test("access modes, Unicode short codes, Action status, and expiration", async (
   ).json();
   assert.equal(completed.state, "success");
   assert.equal(completed.uploadedAt, uploadedAt);
-  assert.equal(
-    completed.runUrl,
-    "https://github.com/owner/links/actions/runs/123",
-  );
+  assert.equal(Object.hasOwn(completed, "runUrl"), false);
 
   records.set("List/expired", {
     code: "expired",
